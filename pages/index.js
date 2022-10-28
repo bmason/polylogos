@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { Box } from "@chakra-ui/react";
+
 
 const Homepage = () => {
     const [isLogged, setIsLogged] = useState();
@@ -10,8 +12,10 @@ const Homepage = () => {
 
     return (
         <>
+
             <h1 style={{ textAlign: "center" }}>Homepage 🏡</h1>
             <hr />
+            <Box>Hello world</Box>
             <nav>
                 <ul style={{ display: "flex", columnGap: "20px", justifyContent: "end" }}>
                     {!isLogged && ( 
