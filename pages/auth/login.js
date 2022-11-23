@@ -1,9 +1,20 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import axios from '../../lib/axios';
 import * as Yup from 'yup';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
+
+
+import { VStack, Input, useToast, Box, Button } from "@chakra-ui/react";
+
+import { useForm } from "react-hook-form";
+import AlertPop from "../../components/AlertPop";
+
+
+
+
+
 
 const Login = () => {
     const { push } = useRouter();
@@ -13,6 +24,12 @@ const Login = () => {
         identifier: "",
         password: ""
     }
+
+    const {
+        register,
+        handleSubmit,
+        formState: { errors }
+      } = useForm();
 
     const validationSchema = Yup.object({
         identifier: Yup.string().required("Required"),
@@ -30,6 +47,7 @@ const Login = () => {
 
                 localStorage.setItem('jwt', jwt);
                 localStorage.setItem('username', username);
+                localStorage.setItem('userId', response.data.user.id);
 
                 push('/');
                 resetForm();
@@ -105,6 +123,51 @@ const Login = () => {
                     </Form>
                 )}
             </Formik>
+
+          <Box>  <form onSubmit={console.log('sub')}>
+        <VStack>
+          <Input
+            type="text"
+            placeholder="First name"
+            {...register("firstname", {
+              required: "Please enter first name",
+              minLength: 3,
+              maxLength: 80
+            })}
+          />
+          {errors.firstname && <AlertPop title={errors.firstname.message} />}
+          <Input
+            type="text"
+            placeholder="Last name"
+            {...register("lastname", {
+              required: "Please enter Last name",
+              minLength: 3,
+              maxLength: 100
+            })}
+          />
+  {errors.lastname && <AlertPop title={errors.lastname.message} />}
+          <Input
+            type="password"
+            placeholder="Password"
+            {...register("password", {
+              required: "Please enter Password",
+              minLength: { value: 8, message: "Too short" }
+            })}
+          />
+          {errors.password && <AlertPop title={errors.password.message} />}
+<AlertPop title={'errors.password.message'} />
+          <Button
+            borderRadius="md"
+            bg="cyan.600"
+            _hover={{ bg: "cyan.200" }}
+            variant="ghost"
+            type="submit"
+          >
+            Submit
+          </Button>
+        </VStack>
+      </form>     
+      </Box>       
         </>
     )
 }
