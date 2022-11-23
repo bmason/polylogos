@@ -12,7 +12,7 @@ import {
   import { useForm , Controller, } from "react-hook-form";
 
   //import { ErrorMessage } from "@hookform/error-message";
-  import AlertPop from "../components/AlertPop";
+  import AlertPop from "../components/alertPop";
   import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import axios from '../lib/axios';
@@ -48,7 +48,7 @@ import {
     useEffect(() => {
         TagUtils.get(setTags)
 
-      }, [])
+      }, [TagUtils])
 
     
     function tagHierarchy(tags) {

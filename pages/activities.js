@@ -13,7 +13,7 @@ import {
   import { useForm , Controller, } from "react-hook-form";
 
   //import { ErrorMessage } from "@hookform/error-message";
-  import AlertPop from "../components/AlertPop";
+  import AlertPop from "../components/alertPop";
   import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import axios from '../lib/axios';
@@ -56,7 +56,8 @@ import {
         console.log('event ', event)
 
         event.userId = localStorage.getItem('userId')
-          
+        event.completed = true
+
         axios
         .post('http://localhost:1337/api/events', {data: event}, {
           headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
@@ -65,7 +66,7 @@ import {
             onClose()
             reset()
             toast({
-              title: `${event.name} saved`,
+              title: `${event.description} saved`,
               status: "success",
               duration: 3000,
               isClosable: true
@@ -94,7 +95,7 @@ import {
     useEffect(() => {
         TagUtils.get(setTags)
         setdisplayTags([])
-      }, [])
+      }, [TagUtils])
 
 
  

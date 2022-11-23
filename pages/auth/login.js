@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { VStack, Input, useToast, Box, Button } from "@chakra-ui/react";
 
 import { useForm } from "react-hook-form";
-import AlertPop from "../../components/AlertPop";
+import AlertPop from "../../components/alertPop";
 
 
 

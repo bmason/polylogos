@@ -10,7 +10,7 @@ export default function CommonCode () {
                     setTags(oTags)
                     
                 axios
-                .get('http://localhost:1337/api/tags', {
+                .get('/api/tags', {
                   headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
                 })
                 .then(({ data }) => {//console.log('tags', data); 
