@@ -4,13 +4,13 @@ export default function CommonCode () {
     return (
         {
             get: function (setTags) {
-                let oTags = localStorage.getItem('logosTags')
+                let oTags //= localStorage.getItem('logosTags')
 
-                if ( oTags  )
-                    setTags(oTags)
+               // if ( oTags  )
+               //     setTags(oTags)
                     
                 axios
-                .get('/api/tags', {
+                .get('/api/tags?pagination[limit]=-1', {
                   headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
                 })
                 .then(({ data }) => {//console.log('tags', data); 
@@ -21,7 +21,7 @@ export default function CommonCode () {
           
                     localStorage.setItem('logosRawTags', JSON.stringify(data.data))
                     oTags = this.withHierarchy(data.data)
-                    localStorage.setItem('logosTags', oTags)
+                    //localStorage.setItem('logosTags', JSON.stringify(oTags))
                     setTags(oTags) 
                 })
                 .catch((error) => console.log(error))
@@ -65,16 +65,43 @@ export default function CommonCode () {
                
                 return roots  //this.flattenTags(roots, [])
             },
+            delete(tagId, setTags) {
+                axios
+                .delete(`/api/tags/${tagId}`, {
+                  headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+                })
+                .then(({ data }) => {console.log('del tags', data); 
+
+                let rawTags = JSON.parse(localStorage.getItem('logosRawTags'))
+                rawTags = rawTags.filter(e=>e.id!=tagId)
+
+                localStorage.setItem('logosRawTags', JSON.stringify(rawTags))
+                let oTags = this.withHierarchy(rawTags)
+                //localStorage.setItem('logosTags', JSON.stringify(oTags))
+                setTags(oTags) 
+                })
+                .catch((error) => console.log(error))
+
+
+            },
+
             withParents(tags) {
 
                 if(Array.isArray(tags))
                     return tags.map(e => this.withParents(e)).flat()
 
                 let line = [tags]
-                let rawTags = JSON.parse(localStorage.getItem('logosRawTags'))
+
    
-                if (tags.parentId)
+                if (tags.parentId) {
+                    let rawTags = JSON.parse(localStorage.getItem('logosRawTags'))
                     line.unshift(rawTags.find(e => e.id == tags.parentId))
+                
+                    if (line[0].parentId)
+                        line.unshift(this.withParents(line[0]))
+                        line = line.flat()
+                }
+
                 return line
             },
             flattenTags: function(roots, list) {
@@ -88,7 +115,7 @@ export default function CommonCode () {
                         this.flattenTags(copy.children, list)
                     delete copy.children
                 }
-        
+
                 return list
             },  
             getTagOptions: function (form, visibleTags) { 
@@ -126,31 +153,30 @@ export default function CommonCode () {
 
                 tag.parentId = tag.parent ? tag.parent.id : null
           
-              let resp
-          
-              if (tag.id) {
-                let updates = {name: state.form.name,description: state.form.description, parentId: state.form.parentId}
+              if (tag.id) {console.log('update', tag)
           
                 //resp = await update('tags', state.form.id, updates)
                 axios
-                .put('http://localhost:1337/api/tags', {
+                .put(`/api/tags/${tag.id}`, {data: tag}, {
                   headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
                 })
-                .then(({ data }) => {console.log('tags', data); 
-                  data.data.forEach(e=>Object.assign(e, e.attributes))
-          
-                  let oTags = this.withHierarchy(data.data)
+                .then(({ data }) => {console.log('update tags', data); 
 
-                   success(oTags)
-                  })
-                .catch((error) => fail(error))
+                    let rawTags = JSON.parse(localStorage.getItem('logosRawTags'))
+                    let updatedTag = rawTags.find(e => e.id == tag.id)
+                    Object.assign(updatedTag, data.data.attributes)
+
+                    localStorage.setItem('logosRawTags', JSON.stringify(rawTags))
+                    success(data) 
+                    })
+                .catch((error) => console.log(error)) //fail(error))
           
               } else {
           
                 tag.userId = localStorage.getItem('userId')
           
                 axios
-                .post('http://localhost:1337/api/tags', {data: tag}, {
+                .post('/api/tags', {data: tag}, {
                   headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
                 })
                 .then(({ data }) => {//console.log('tags', data); 

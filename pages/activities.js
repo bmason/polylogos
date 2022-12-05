@@ -80,6 +80,7 @@ import {
     function details (displayTags) { 
 
         let fieldTags = displayTags.filter(e => e.details && e.details.fields) 
+
         return (fieldTags.map(e => 
             <HStack w='100%'  key={e.id}>  
                 <Box w='100%' >
@@ -95,7 +96,7 @@ import {
     useEffect(() => {
         TagUtils.get(setTags)
         setdisplayTags([])
-      }, [TagUtils])
+      }, [])
 
 
  

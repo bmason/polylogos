@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, useId } from 'react';
 import Link from 'next/link';
 
-import useSWR from "swr";
 import axios from '../lib/axios';
 import commonCode from "../components/commonTagCode";
 
@@ -26,6 +25,7 @@ import {
   import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import { PhoneIcon, AddIcon, WarningIcon } from '@chakra-ui/icons'
+import { setNestedObjectValues } from 'formik';
 
 
   
@@ -72,27 +72,34 @@ const Homepage = () => {
         reset,
         register,
         getValues,
+        setValue,
         handleSubmit,
         formState: { errors }
       } = useForm();
 
       const onSubmit = (data) => {
+
+        console.log('data', data, getValues())
+
+        //return
         let event = {'description': data.description, 'note':data.note}
 
-        console.log('data', data)
-
         if (data.tags) {
-        event.tags = data.tags.map(e => e.id)
+          event.tags = data.tags.map(e => e.id)
 
             event.details = {}
             TagUtils.withParents(data.tags).forEach(e => {
-                if (e.details && e.details.fields)
-                    e.details.fields.forEach(f => event.details[f.title] = data[f.title])
+                if (e.details && e.details.fields) 
+                    e.details.fields.forEach(f => {event.details[f.title] = data[f.title]
+                      if (f.type == 'currency')
+                        event.details.currency = data.currency ? data.currency.id : f.defaultCurrency
+                    })
             })
         }
+          
 
         event.details = JSON.stringify(event.details)
-        console.log('event ', event)
+        console.log('event ', event) 
 
         event.userId = localStorage.getItem('userId')
         event.completed = true
@@ -116,25 +123,61 @@ const Homepage = () => {
 
     const [selectedOptions, setSelectedOptions] = useState(); 
 
+
     function details (displayTags) { 
 
         let fieldTags = displayTags.filter(e => e.details && e.details.fields) 
-        return (fieldTags.map(e => 
-            <HStack w='100%'  key={e.id}>  
-                <Box w='100%' >
+
+        return (fieldTags.map(e => e.details.fields.map(tagField =>
+            <HStack w='100%'  key={e.id+tagField.title}>  
+                <Box w={tagField.type == 'currency' ? '70%' : '100%'} >
                     <Input
-                        type={e.details.fields[0].type}
-                        placeholder={e.details.fields[0].title}
-                        {...register(e.details.fields[0].title, {})}
+                        type={tagField.type == 'currency' ? 'number' : 'date'}
+                        placeholder={tagField.title}
+                        {...register(tagField.title, {})}
+                       defaultValue = {tagField.type == 'date'  
+                        ? new Date().toISOString().substring(0,10)
+                        : null}
                     />
                 </Box>
-            </HStack>))
+                {tagField.type == 'currency' &&
+                  <Box w='30%'>
+                    <Controller
+                        name="currency"
+                        type="select"
+                        control={control}
+                        
+                        render={({ field }) => (
+                            <Select 
+                                {...field}   
+                          
+                                options={[{id: 'THB', label:'THB'}, {id:'USD', label:'USD'}]}
+                                defaultValue={{id: tagField.defaultCurrency, label: tagField.defaultCurrency}}
+                            />
+
+                        )}
+                    />
+                  </Box>  
+                }
+            </HStack>))).flat()
     }
 
     useEffect(() => {
         TagUtils.get(setTags)
         setdisplayTags([])
-      }, [TagUtils])
+
+     /*    axios
+        .get('/api/events?filters[tags][id][$in][0]=12&filters[tags][id][$in][1]=14', {
+          headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+        })
+        .then(({ data }) => {console.log('events', data); 
+
+
+        })
+        .catch((error) => console.log(error))
+*/
+
+      }, []) 
 
 
  
@@ -146,6 +189,7 @@ const Homepage = () => {
    const openDialog = () => {
     reset()
     setdisplayTags([])
+  
     onOpen()
 
    }
@@ -155,6 +199,8 @@ function handleTagChange(e) {
     console.log('change ', getValues(), e)
     console.log('line ', TagUtils.withParents(e))
     setdisplayTags(TagUtils.withParents(e))
+
+
 }
 
 
@@ -291,7 +337,7 @@ function handleTagChange(e) {
     </ModalBody>
 
     <ModalFooter>
-      <Button variant='ghost'  mr={3} onClick={onClose}>
+      <Button variant='ghost'  mr={3} onClick={() => { reset({description:'test', currency:{id:'THB', label: 'THB'}}); console.log('reset ', getValues());}}>
         Cancel
       </Button>
 

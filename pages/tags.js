@@ -7,16 +7,27 @@ import {
     ModalFooter,
     ModalBody, useDisclosure ,
     ModalCloseButton,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,   
+   
   } from '@chakra-ui/react'
   import {VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton  } from "@chakra-ui/react";
-  import { useForm , Controller, } from "react-hook-form";
+  import { useForm , Controller} from "react-hook-form";
 
   //import { ErrorMessage } from "@hookform/error-message";
   import AlertPop from "../components/alertPop";
   import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import axios from '../lib/axios';
-  import { PhoneIcon, AddIcon, WarningIcon } from '@chakra-ui/icons'
+  import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
   
   export default function Builder() {
     const toast = useToast();
@@ -30,14 +41,17 @@ import {
       reset,
       register,
       handleSubmit,
+      setValue,
       formState: { errors }
     } = useForm();
 
   
 
-    const onSubmit = (data) => {
+    const onSubmit = (data) => { console.log('submit', data)
+      if(opTag)
+        data.id = opTag.id
       TagUtils.store(data, tagUpdated, setError)
-      console.log(data);
+
 
  
       //setData(data);
@@ -48,36 +62,75 @@ import {
     useEffect(() => {
         TagUtils.get(setTags)
 
-      }, [TagUtils])
+      }, [])
 
-    
+    const [opTag, setOpTag] = useState();
+
+function deleteTag(){ console.log(alertProps)
+  TagUtils.delete(opTag.id, setTags)
+  alertClose()
+}
+function promptDeleteTag(tag) { 
+  setOpTag(tag) 
+  alertOpen(true, {tag:tag})
+}
+
+function editTag(tag) {
+  setOpTag(tag) 
+  setValue('name', tag.name)
+  setValue('description', tag.description)
+  let isolatedTag = Object.assign({}, tag.parent)
+  delete (isolatedTag.children)
+  delete (isolatedTag.parent)
+  setValue('parent', isolatedTag, { shouldValidate: false, shouldDirty: false })
+  onOpen()
+}
+
+const { getDisclosureProps: getAlertProps, isOpen: alertIsOpen, onOpen: alertOpen, onClose: alertClose } = useDisclosure()
+const alertProps = getAlertProps()
+
+const cancelRef = React.useRef()
+
     function tagHierarchy(tags) {
 
       //console.log('ta tags', tags)
       if (Array.isArray(tags))
       return (
          
-        tags.map(({ id, name, children }) => 
-          <Box key={id} mt='6px' boxShadow='xs' p='6' rounded='md' bg='white'>
-            {name}
-              {tagHierarchy(children)}
+        tags.map((e) => 
+          <Box key={e.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
+            {e.name}
+              {tagHierarchy(e.children)}
+
+              <Menu>
+  <MenuButton
+    as={IconButton}
+    aria-label='Options'
+    icon={<HamburgerIcon />}
+    variant='outline'
+    pos="absolute" top="0" right="0"
+  />
+  <MenuList>
+
+    <MenuItem icon={<DeleteIcon />} onClick={() =>promptDeleteTag(e)}>
+      Delete
+    </MenuItem>
+    <MenuItem icon={<EditIcon />} onClick={() =>editTag(e)}>
+      Edit
+    </MenuItem>
+  </MenuList>
+</Menu>              
   
           </Box>
         )
       )
     }
 
-    const [tabIndex, setTabIndex] = useState(0)
   
-    const handleSliderChange = (event) => {
-      setTabIndex(parseInt(event.target.value, 10))
-    }
-  
-    const handleTabsChange = (index) => {
-      setTabIndex(index)
-    }
+
     
    const openDialog = () => {
+    setOpTag(null)
     reset()
     onOpen()
 
@@ -120,7 +173,32 @@ import {
 
 </SimpleGrid> 
 
+<AlertDialog
+        isOpen={alertIsOpen}
+        leastDestructiveRef={cancelRef}
+        onClose={alertClose}
+      >
+        <AlertDialogOverlay>
+          <AlertDialogContent>
+            <AlertDialogHeader fontSize='lg' fontWeight='bold'>
+              Delete Customer
+            </AlertDialogHeader>
 
+            <AlertDialogBody>
+              Are you sure? You can't undo this action afterwards.
+            </AlertDialogBody>
+
+            <AlertDialogFooter>
+              <Button ref={cancelRef} onClick={alertClose}>
+                Cancel
+              </Button>
+              <Button colorScheme='red' onClick={deleteTag} ml={3}>
+                Delete
+              </Button>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialogOverlay>
+      </AlertDialog>
  
 
 
@@ -137,7 +215,7 @@ import {
               type="text"
               placeholder="name"
               {...register("name", {
-                required: "Please enter first name",
+                required: "Please enter name",
                 minLength: 3,
                 maxLength: 80
               })}
