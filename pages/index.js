@@ -3,11 +3,10 @@ import Link from 'next/link';
 
 import axios from '../lib/axios';
 import commonCode from "../components/commonTagCode";
-
+import Head from "next/head"
 
 import {
     useDisclosure,
-    useColorMode,
     Modal,
     ModalOverlay,
     ModalContent,
@@ -60,7 +59,7 @@ const Homepage = () => {
 
 
       const btnRef = useRef();
-      const { colorMode, toggleColorMode } = useColorMode()
+     
       const toast = useToast();
       const [data, setData] = useState();
       const { isOpen, onOpen, onClose } = useDisclosure();
@@ -82,7 +81,7 @@ const Homepage = () => {
         console.log('data', data, getValues())
 
         //return
-        let event = {'description': data.description, 'note':data.note}
+        let event = {'description': data.description, 'note':data.note, complete: true}
 
         if (data.tags) {
           event.tags = data.tags.map(e => e.id)
@@ -205,47 +204,27 @@ function handleTagChange(e) {
 
 
     return (
-        <>
+      <>
 
-            <h1 style={{ textAlign: "center" }}>Homepage 🏡</h1>
-            <hr />
+
+        
+
+
+            <Head>
+       
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+<link rel="manifest" href="/site.webmanifest" />
+
+      </Head>        
  
-            <nav>
-                <ul style={{ display: "flex", columnGap: "20px", justifyContent: "end" }}>
-                    {!isLogged && ( 
-                        <li>
-                            <Link href="/auth/register">
-                                <a>Register</a>
-                            </Link>
-                        </li>
-                    )}
-                    <li>
-                        {!isLogged ? (
-                            <Link href="/auth/login">
-                                <a>Login</a>
-                            </Link>
-                        ) : (
-                            <Link href="/auth/logout">
-                                <a>Logout</a>
-                            </Link>
-                        )}
-                    </li>
-                </ul>
-            </nav>
-            <hr />
+
+
             <main>
-                {isLogged ? (
-                    <p>👋🏼 &nbsp;Welcome back, <b>{localStorage.username}</b>!</p>
-                ) : (
-                    <>
-                        <p>You are not logged in, yet.</p>
-                        <p>Log in to see something here.</p>
-                    </>
-                )}
+
             </main>
-            <Button onClick={toggleColorMode}>
-        Toggle {colorMode === 'light' ? 'Dark' : 'Light'}
-      </Button>
+
 
 
       <VStack mt={4} > 

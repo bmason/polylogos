@@ -8,18 +8,30 @@ import {
     ModalBody, useDisclosure ,
     ModalCloseButton,
     HStack,
+    Menu,
+    MenuButton,
+    MenuList,
+    MenuItem,
+    Icon,
+    AlertDialog,
+    AlertDialogBody,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogContent,
+    AlertDialogOverlay,     
   } from '@chakra-ui/react'
   import {VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton  } from "@chakra-ui/react";
   import { useForm , Controller, } from "react-hook-form";
+  import { GiTomato } from 'react-icons/Gi';
 
   //import { ErrorMessage } from "@hookform/error-message";
   import AlertPop from "../components/alertPop";
   import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import axios from '../lib/axios';
-  import { PhoneIcon, AddIcon, WarningIcon } from '@chakra-ui/icons'
+  import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
   
-  export default function Builder() {
+  export default function Builder({state}) {
     const toast = useToast();
     const [data, setData] = useState();
     const { isOpen, onOpen, onClose } = useDisclosure();
@@ -93,9 +105,22 @@ import {
             </HStack>))
     }
 
-    useEffect(() => {
+    useEffect(() => {  //console.log('log', state.isLogged)
         TagUtils.get(setTags)
-        setdisplayTags([])
+
+        axios
+        .get('/api/activities?populate=tags', {
+          headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+        })
+        .then(({ data }) => {     //console.log('act', data)    
+          data.data.forEach(e => Object.assign(e, e.attributes))
+          setData(data.data)
+        
+        })
+        .catch((error) => console.log(error)) //(error) => fail(error))
+
+
+
       }, [])
 
 
@@ -119,7 +144,38 @@ function handleTagChange(e) {
     setdisplayTags(TagUtils.withParents(e))
 }
 
+function displayActivities(activities) {
 
+  if (Array.isArray(activities))
+  return (  
+  activities.map((e) =>
+  <Box key={e.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
+    {e.name}
+
+
+      <Menu>
+<MenuButton
+as={IconButton}
+aria-label='Options'
+icon={<HamburgerIcon />}
+variant='outline'
+pos="absolute" top="0" right="0"
+/>
+<MenuList>
+
+<MenuItem icon={<DeleteIcon />} onClick={() =>promptDeleteTag(e)}>
+Delete
+</MenuItem>
+<MenuItem icon={<EditIcon />} onClick={() =>editTag(e)}>
+Edit
+</MenuItem>
+</MenuList>
+</Menu>              
+
+  </Box>
+)  
+  )
+}
 
    
     return (
@@ -137,9 +193,13 @@ function handleTagChange(e) {
 >
 <IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
 
-
-
+{displayActivities(data)}
+<Icon as={GiTomato} />
 </SimpleGrid> 
+
+
+
+
 
 
  

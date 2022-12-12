@@ -16,7 +16,7 @@ import AlertPop from "../../components/alertPop";
 
 
 
-const Login = () => {
+const Login = ({state}) => {
     const { push } = useRouter();
     const [alert,setAlert] = useState();
 
@@ -48,6 +48,7 @@ const Login = () => {
                 localStorage.setItem('jwt', jwt);
                 localStorage.setItem('username', username);
                 localStorage.setItem('userId', response.data.user.id);
+                state.setIsLogged(true)
 
                 push('/');
                 resetForm();
