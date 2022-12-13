@@ -101,7 +101,7 @@ const Homepage = () => {
         console.log('event ', event) 
 
         event.userId = localStorage.getItem('userId')
-        event.completed = true
+        event.complete = true
         
         axios
         .post('/api/events', {data: event}, {

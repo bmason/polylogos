@@ -97,7 +97,7 @@ export default function Simple({state, children}) {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Box><img src="https://polylogos.xyz/PLLogo.png" /></Box>
+            <Box><img src="https://myally.co/sites/common/polylogos/PLLogo.png" /></Box>
             <HStack
               as={'nav'}
               spacing={4}
