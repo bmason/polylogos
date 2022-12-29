@@ -1,4 +1,7 @@
+import { GiConcentrationOrb } from 'react-icons/gi';
 import axios from '../lib/axios';
+import {HStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton  } from "@chakra-ui/react";
+
 
 export default function CommonCode () {
     return (
@@ -25,6 +28,31 @@ export default function CommonCode () {
                     setTags(oTags) 
                 })
                 .catch((error) => console.log(error))
+              },
+              family: function (parent, tags) {
+               
+                let pih = this.findInHierarchy(parent, tags)
+                //console.log('found',pih)
+                let wc = this.withChildren(pih)
+                return wc
+              },
+              withChildren (parent) {
+                let ret = [parent]
+                //console.log('parent', parent)
+                parent.children.forEach(e => {
+                    ret = ret.concat(this.withChildren(e))
+              })
+                return ret
+              },
+              findInHierarchy(tag, tags) {
+                for (let i =0; i<tags.length; i++) {
+                    let found 
+                    if (tags[i].id == tag.id)
+                        return tags[i]
+                    else 
+                        if ( found = this.findInHierarchy(tag, tags[i].children))
+                            return found
+                }
               },
             withHierarchy: function(data) { 
               
@@ -186,19 +214,43 @@ export default function CommonCode () {
               }
             },
             displayTime(tin) {
-        
-                return  Math.floor(tin / 3600).toString().padStart(2, "0") + ":" +
+                let negative = false
+                if (tin< 0) {
+                    tin = 0 - tin
+                    negative = true
+                }
+
+                let timeString = Math.floor(tin / 3600).toString().padStart(2, "0") + ":" +
                 (Math.floor(tin / 60)  % 60).toString().padStart(2, "0") 
                 + ':' + (tin % 60).toString().padStart(2, "0");
+
+                return {timeString: timeString, negative: negative}
             },
             fetchAllChildIds: function(root, childIds) {
                 childIds.push(root.id)
                 root.children.forEach(e => this.fetchAllChildIds(e, childIds))
         
                 return childIds
-            }              
-      
-        
+            },              
+            withContext(tags, allTags) {
+
+                return tags.map(e=>allTags.find(f=>f.id==e.id))
+            },
+            format(item, tags) {
+//console.log('format', item,tags)
+                if (item.details && item.details.amount)
+                    return (
+                    <HStack>
+                        <Text>{item.details.date }</Text>
+                    <Text>{'amount:'}</Text>
+                    {item.details.currency && <Text>{item.details.currency}</Text>}
+                        <Text>{item.details.amount}</Text> 
+                    </HStack>
+                ) 
+                
+
+                    console.log(item)
+            }
         
         })
     }

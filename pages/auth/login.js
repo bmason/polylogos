@@ -125,7 +125,7 @@ const Login = ({state}) => {
                 )}
             </Formik>
 
-          <Box>  <form onSubmit={console.log('sub')}>
+          <Box>  <form onSubmit={() =>console.log('sub')}>
         <VStack>
           <Input
             type="text"

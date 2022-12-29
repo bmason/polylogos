@@ -22,7 +22,9 @@ import {
 } from '@chakra-ui/react'
 import { VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
 import { useForm, Controller, } from "react-hook-form";
-import { GiTomato } from 'react-icons/Gi';
+import { GiTomato } from 'react-icons/gi';
+import { TfiWrite } from 'react-icons/tfi';
+import { IoStop } from 'react-icons/io5';
 
 //import { ErrorMessage } from "@hookform/error-message";
 import AlertPop from "../components/alertPop";
@@ -48,7 +50,10 @@ export default function Builder({ state }) {
     formState: { errors }
   } = useForm();
 
+  const [selectedOptions, setSelectedOptions] = useState();
 
+  let openEvent
+  const [oneOpenEvent, setOneOpenEvent] = useState();
 
   const onSubmit = (data) => {
     let event = { 'description': data.description, 'note': data.note }
@@ -69,7 +74,7 @@ export default function Builder({ state }) {
     console.log('event ', event)
 
     event.userId = localStorage.getItem('userId')
-    event.completed = true
+    event.complete = true
 
     axios
       .post('http://localhost:1337/api/events', { data: event }, {
@@ -88,9 +93,7 @@ export default function Builder({ state }) {
       .catch((error) => console.log(error)) //(error) => fail(error))
   };
 
-  const [selectedOptions, setSelectedOptions] = useState();
 
-  let openEvent = null
 
   function details(displayTags) {
 
@@ -110,7 +113,7 @@ export default function Builder({ state }) {
 
   useEffect(() => {  //console.log('log', state.isLogged)
 
-    if (1) {//!window.Notification
+    if (!window.Notification) {
       console.log('Browser does not support notifications.')
     } else {
       // check if permission is already granted
@@ -132,14 +135,31 @@ export default function Builder({ state }) {
       }
     }
 
+
+
+
     TagUtils.get(setTags)
 
     axios
-      .get('/api/activities?populate=tags', {
+      .get('/api/activities?populate=tags,events', {
         headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
       })
-      .then(({ data }) => {     //console.log('act', data)    
-        data.data.forEach(e => Object.assign(e, e.attributes))
+      .then(({ data }) => {     console.log('act', data)    
+
+
+        data.data.forEach(e => { //replace with find
+          Object.assign(e, e.attributes)
+          e.events = e.events.data
+          if(e.events) e.events.forEach(f => {
+            Object.assign(f, f.attributes)
+            f.details = JSON.parse(f.details)
+            if(!f.complete && f.details && f.details.pomodoroStart) {
+                reset({'description': f})
+                pomodoro(e, f)
+            }
+          })
+
+        })
         setData(data.data)
 
       })
@@ -156,6 +176,7 @@ export default function Builder({ state }) {
 
   const [displayTags, setdisplayTags] = useState([])
 
+  let remindOnce = false
 
   const openDialog = () => {
     reset()
@@ -164,33 +185,156 @@ export default function Builder({ state }) {
 
   }
 
-  function pomodoro(e) {
-    let event = {tags: e.tags.data, details: {pomodoroStart: (new Date()).toISOString()}}
-    openEvent = event
-    e.openEvent = event
-    console.log(e)
-    timerStart()
-    forceUpdate()
-  }
-  
-  function timerStart() {
-    displayTime()
-    setInterval(displayTime , 1000)
 
-  } 
+  function playSound(soundfile_mp) {
+    if ("Audio" in window) {
+        var a = new Audio();
 
-function displayTime() {
-  if(openEvent && openEvent.details.pomodoroStart) {
-    let timeElapsed = (new Date()).getTime() - (new Date(openEvent.details.pomodoroStart)).getTime() 
-//console.log(timeElapsed,(new Date()).getSeconds(),(new Date(openEvent.details.pomodoroStart)).getSeconds() );
-    setTimerString(TagUtils.displayTime(25*60 - Math.floor(timeElapsed/1000)))
+        if (!!(a.canPlayType && a.canPlayType('audio/mpeg;').replace(/no/,
+                '')))
+            a.src = soundfile_mp;
+
+        a.autoplay = true;
+    //setTimeout(function (){a.pause()}, 10000);
+        return;
   }
 }
 
 
+
+  function pomodoro(e, startedEvent=null) {
+
+    let event
+    if (!startedEvent) {
+      event = {activity: e.id, userId: localStorage.getItem('userId') ,tags: e.tags.data.map(f=>f.id), complete: false, details: {pomodoroStart: (new Date()).toISOString()}}
+
+    let updateEvent = {...event}
+    updateEvent.details = JSON.stringify(event.details)
+console.log('update', updateEvent)
+    axios
+    .post('/api/events',{data: updateEvent}, {
+      headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+    })
+    .then(({ data }) => {  console.log('event', data)    
+      event.id = data.data.id
+  
+  
+    })
+    .catch((error) => console.log(error)) //(error) => fail(error)) 
+  } else event = startedEvent
+
+
+    setOneOpenEvent(event)
+    e.openEvent = event
+    openEvent = event
+    remindOnce = true
+
+
+    timerStart()
+    forceUpdate()
+    console.log('activity',e)
+  }
+  
+  function timerStart() {
+    displayTime()
+
+    if (!openEvent.timerID) {    //console.log('openEvent', openEvent)
+
+      let tid = setInterval(displayTime, 1000)
+      openEvent.timerID = tid
+    }
+  } 
+
+function displayTime() { 
+  if(openEvent && openEvent.details.pomodoroStart) {
+    let timeElapsed = (new Date()).getTime() - (new Date(openEvent.details.pomodoroStart)).getTime() 
+//console.log(timeElapsed,(new Date()).getSeconds(),(new Date(openEvent.details.pomodoroStart)).getSeconds() );
+
+    let timeRemaining = 25*60 - Math.floor(timeElapsed/1000)
+
+    if (remindOnce && (timeRemaining <= 0)) {
+      remindOnce = false
+      playSound('https://myally.co/sites/common/Alarm-Fast.mp3');
+      spawnNotification('break time 🏖', '/favicon.ico', 'Pomodoro')
+    }
+
+    let newTime = TagUtils.displayTime(timeRemaining)
+    document.title = (newTime.negative ? '🏖': '🖥️') + newTime.timeString
+    newTime.timeString = document.title
+    setTimerString(newTime)
+  }
+}
+
+function spawnNotification(body, icon, title) {
+  var options = {
+      body: body,
+      icon: icon
+  };
+  
+	try { 
+		var n = new Notification(title, options);
+		n.onclick = () =>{ 
+      window.focus();
+      n.close()
+    }
+	} catch(err) {
+		Notification.requestPermission(function(result) {
+		  if (result === 'granted') {
+			navigator.serviceWorker.ready.then(function(registration) {
+			  n = registration.showNotification(title, options);
+			  n.onclick = () =>{          
+          window.focus();
+        }
+			});
+		  }
+		});
+  
+	}
+   
+}	
+
+  function pomodoroStopAndWrite(activity) { 
+    clearInterval(activity.openEvent.timerID)
+    delete activity.openEvent.timerID
+    activity.openEvent.details.pomodoroStop = (new Date()).toISOString()
+    console.log('event', activity.openEvent)
+    setOneOpenEvent(null)
+    setTimerString(null)
+
+    pomodoroWrite(activity)    
+    data.forEach(e=> {if(e.openEvent) delete e.openEvent})
+    forceUpdate()
+
+
+    document.title = 'Activities'
+  }
+
+function pomodoroWrite (activity) {  //console.log('act', activity)
+
+  let updateEvent = {description: getValues().description}
+  if (activity.openEvent.details.pomodoroStop) {
+    updateEvent.details = JSON.stringify(activity.openEvent.details)
+    updateEvent.complete = true
+  }
+
+  axios
+  .put(`/api/events/${activity.openEvent.id}`,{data: updateEvent}, {
+    headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+  })
+  .then(({ data }) => {  //console.log('event', data)    
+
+
+
+  })
+  .catch((error) => console.log(error)) //(error) => fail(error)) 
+
+
+}
+
+
   function handleTagChange(e) {
-    console.log('change ', getValues(), e)
-    console.log('line ', TagUtils.withParents(e))
+    //console.log('change ', getValues(), e)
+    //console.log('line ', TagUtils.withParents(e))
     setdisplayTags(TagUtils.withParents(e))
   }
 
@@ -200,7 +344,7 @@ function displayTime() {
       return (
         activities.map((e) =>
           <Box key={e.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
-            {e.name}
+            {e.name} 
 
 
             <Menu>
@@ -219,15 +363,37 @@ function displayTime() {
                 <MenuItem icon={<EditIcon />} onClick={() => editTag(e)}>
                   Edit
                 </MenuItem>
-                <MenuItem  icon={<GiTomato color='red'/>} onClick={() => pomodoro(e)}>
+                {!oneOpenEvent && <MenuItem  icon={<GiTomato color='red'/>} onClick={() => pomodoro(e)}>
                   Pomodoro
-                </MenuItem>
+                </MenuItem>}
               </MenuList>
             </Menu>
 
             {e.openEvent && 
               <Box key={e.openEvent.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
                 {new Date(e.openEvent.details.pomodoroStart).toLocaleTimeString()}
+
+
+              <form >
+                <VStack>
+                  <Input
+                    type="text"
+                    placeholder="description"
+                    {...register("description", {
+
+                      maxLength: 80
+                    })}
+                  />
+
+                </VStack>
+
+              </form>
+              <HStack>
+              <Button  onClick={()=>pomodoroWrite(e)}  rightIcon={<TfiWrite />}></Button>
+
+                <Button  onClick={()=>pomodoroStopAndWrite(e)}  leftIcon={ <IoStop/>} rightIcon={<TfiWrite />}  ></Button>
+              </HStack>
+              
               </Box>
             }
 
@@ -253,9 +419,9 @@ function displayTime() {
         <IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
 
         {timerString &&
-          <Box>
-            {timerString} 
-          </Box> 
+          <Box color={timerString.negative ? 'pink' : 'black'}>
+            {timerString.timeString}
+          </Box>
         }
 
         {displayActivities(data)}

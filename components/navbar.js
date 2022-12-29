@@ -21,24 +21,22 @@ import {
   useColorMode,
   useColorModeValue,
   Spinner,
+  Text,
   Stack,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
 
 
-const Links = [{label:'Dashboard', href: '/'}, {label:'Activities', href:'activities'}, {label:'Tags', href:'/tags'}];
+const Links = [{label:'Dashboard', href: '/'}, {label:'Activities', href:'activities'},{label:'Events', href:'/events'} ,{label:'Tags', href:'/tags'}];
 
-const NavLink = ({ children }) => (
+const NavLink = ({ children, fs }) => (
   <Link
     px={2}
     py={1}
     rounded={'md'}
-    _hover={{
-      textDecoration: 'none',
-      bg: useColorModeValue('gray.200', 'gray.700'),
-    }}
+    cursor={'pointer'}
     href={children.href}>
-    {children.label}
+    <Text fontSize={fs ? '2xl' : null}>{children.label}</Text>
   </Link>
 );
 
@@ -97,7 +95,7 @@ export default function Simple({state, children}) {
             onClick={isOpen ? onClose : onOpen}
           />
           <HStack spacing={8} alignItems={'center'}>
-            <Box><img src="https://myally.co/sites/common/polylogos/PLLogo.png" /></Box>
+            <Box><img src="/PLLogo.png" /></Box>
             <HStack
               as={'nav'}
               spacing={4}
@@ -146,7 +144,7 @@ export default function Simple({state, children}) {
           <Box onClick={isOpen ? onClose : onOpen} pb={4} display={{ md: 'none' }}>
             <Stack as={'nav'} spacing={4}>
               {Links.map((link) => (
-                <NavLink key={link.href}>{link}</NavLink>
+                <NavLink fs='xl' key={link.href}>{link}</NavLink>
               ))}
             </Stack>
           </Box>

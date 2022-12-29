@@ -289,8 +289,9 @@ function handleTagChange(e) {
             render={({ field }) => (
               <div style={{width: '100%'}}>
                 <Select {...field}   
-                    onChange={e => { field.onChange(e)
-                        handleTagChange(e)}
+                    onChange={e => { 
+                      field.onChange(e)
+                      handleTagChange(e)}
                     }
                     placeholder='tags'
                     isMulti={true}
