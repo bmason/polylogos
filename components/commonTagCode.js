@@ -1,17 +1,26 @@
 import { GiConcentrationOrb } from 'react-icons/gi';
 import axios from '../lib/axios';
 import {HStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton  } from "@chakra-ui/react";
+import { Context } from  '../context/context'; 
+import React, { useContext, useEffect, useId } from "react";
+//import { contextType } from 'react-quill';
 
 
 export default function CommonCode () {
-    return (
-        {
-            get: function (setTags) {
-                let oTags //= localStorage.getItem('logosTags')
+    const [context, setContext ] = useContext(Context)
 
-               // if ( oTags  )
-               //     setTags(oTags)
-                    
+    let tagFunctions = 
+
+
+        {
+            get: function (storeTags) {  console.log('get tags', context)
+
+                let oTags = []
+
+                if (context.treeTags.size || (typeof localStorage == 'undefined'))
+                    return storeTags(context.listTags)
+   console.log('axios', context)   
+
                 axios
                 .get('/api/tags?pagination[limit]=-1', {
                   headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
@@ -25,7 +34,11 @@ export default function CommonCode () {
                     localStorage.setItem('logosRawTags', JSON.stringify(data.data))
                     oTags = this.withHierarchy(data.data)
                     //localStorage.setItem('logosTags', JSON.stringify(oTags))
-                    setTags(oTags) 
+                    //setTags(oTags) 
+
+             console.log('o tags', oTags)     
+
+                    return storeTags(oTags)
                 })
                 .catch((error) => console.log(error))
               },
@@ -132,7 +145,11 @@ export default function CommonCode () {
 
                 return line
             },
-            flattenTags: function(roots, list) {
+            optionList: function() {
+
+                return context.listTags
+            },
+            flattenTags: function(roots, list) { console.log("roots", roots)
                 let ordered = roots.sort((a,b) => a.name > b.name ? 1 : -1)
 
                 for (let e of ordered) {  
@@ -237,22 +254,20 @@ export default function CommonCode () {
                 return tags.map(e=>allTags.find(f=>f.id==e.id))
             },
             format(item, tags) {
-//console.log('format', item,tags)
-                if (item.details && item.details.amount)
-                    return (
-                    <HStack>
-                        <Text>{item.details.date }</Text>
-                    <Text>{'amount:'}</Text>
-                    {item.details.currency && <Text>{item.details.currency}</Text>}
-                        <Text>{item.details.amount}</Text> 
-                    </HStack>
-                ) 
-                
+console.log('format', item,tags)
 
-                    console.log(item)
             }
         
-        })
+        }
+        
+
+      useEffect(() => {tagFunctions.get(
+        (tags) => {setContext( {...context, listTags: tagFunctions.flattenTags(tags, [])})}
+        
+        )}, [])
+        //context.listTags = [{value: 1, label:'test'}]
+console.log('ue done')
+        return (tagFunctions)
     }
 
 
