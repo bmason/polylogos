@@ -42,9 +42,9 @@ export default function CommonCode () {
                 })
                 .catch((error) => console.log(error))
               },
-              family: function (parent, tags) {
+              family: function (parent) {
                
-                let pih = this.findInHierarchy(parent, tags)
+                let pih = this.findInHierarchy(parent, context.treeTags)
                 //console.log('found',pih)
                 let wc = this.withChildren(pih)
                 return wc
@@ -57,13 +57,13 @@ export default function CommonCode () {
               })
                 return ret
               },
-              findInHierarchy(tag, tags) {
-                for (let i =0; i<tags.length; i++) {
+              findInHierarchy(tag, tagHierarchy) {
+                for (let i =0; i<tagHierarchy.length; i++) {
                     let found 
-                    if (tags[i].id == tag.id)
-                        return tags[i]
+                    if (tagHierarchy[i].id == tag.id)
+                        return tagHierarchy[i]
                     else 
-                        if ( found = this.findInHierarchy(tag, tags[i].children))
+                        if ( found = this.findInHierarchy(tag, tagHierarchy[i].children))
                             return found
                 }
               },
@@ -254,7 +254,7 @@ export default function CommonCode () {
                 return tags.map(e=>allTags.find(f=>f.id==e.id))
             },
             format(item, tags) {
-console.log('format', item,tags)
+//console.log('format', item,tags)
 
             }
         
@@ -262,7 +262,7 @@ console.log('format', item,tags)
         
 
       useEffect(() => {tagFunctions.get(
-        (tags) => {setContext( {...context, listTags: tagFunctions.flattenTags(tags, [])})}
+        (tags) => {setContext( {...context, treeTags: tags, listTags: tagFunctions.flattenTags(tags, [])})}
         
         )}, [])
         //context.listTags = [{value: 1, label:'test'}]

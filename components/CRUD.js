@@ -157,12 +157,12 @@ export default function Crud(props) {
 
         <>
 
+
                 {props.items.map((e) =>
                     <Box key={e.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
-                        {e.description}
-                        {TagUtils.format(e, e.tags)}
 
-                        <Menu>
+                        <props.displayItem item={ e }/>
+                        {!e.summary && <Menu>
                             <MenuButton
                                 as={IconButton}
                                 aria-label='Options'
@@ -180,7 +180,7 @@ export default function Crud(props) {
                                 </MenuItem>
 
                             </MenuList>
-                        </Menu>
+                        </Menu>}
 
 
 
@@ -231,53 +231,7 @@ export default function Crud(props) {
                     <ModalCloseButton />
                     <ModalBody>
                         <Box   >
-                            <form onSubmit={handleSubmit(onSubmit)}>
-                                <VStack>
-
-                                    <Input
-                                        type="text"
-                                        placeholder="description"
-                                        {...register("description", {
-                                            minLength: 3,
-                                            maxLength: 100
-                                        })}
-                                    />
-                                    {errors.description && <AlertPop title={errors.description.message} />}
-
-                                    <Input
-                                        type="text"
-                                        placeholder="details"
-                                        {...register("details", {
-                                            minLength: 0,
-                                            maxLength: 100
-                                        })}
-                                    />
-                                    {errors.description && <AlertPop title={errors.description.message} />}
-
-
-                                    <Controller
-                                        name="tags"
-                                        control={control}
-                                        rules={{}}
-                                        render={({ field }) => (
-                                            <div style={{ width: '100%' }}>
-                                                <Select {...field} options={TagUtils.flattenTags(tags, [])}
-                                                />
-                                            </div>
-                                        )}
-                                    />
-
-
-                                </VStack>
-                                <Button
-                                    borderRadius="md"
-                                    bg="cyan.600"
-                                    _hover={{ bg: "cyan.200" }}
-                                    type="submit"
-                                >
-                                    Save
-                                </Button>
-                            </form>
+                            <props.editForm />
 
                         </Box>
                     </ModalBody>

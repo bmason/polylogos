@@ -31,7 +31,60 @@ import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
 import { Context } from  '../context/context';
 
+function EventForm(props) {
+    return                             <form onSubmit={handleSubmit(onSubmit)}>
+    <VStack>
 
+        <Input
+            type="text"
+            placeholder="description"
+            {...register("description", {
+                minLength: 3,
+                maxLength: 100
+            })}
+        />
+        {errors.description && <AlertPop title={errors.description.message} />}
+
+        <Input
+            type="text"
+            placeholder="details"
+            {...register("details", {
+                minLength: 0,
+                maxLength: 100
+            })}
+        />
+        {errors.description && <AlertPop title={errors.description.message} />}
+
+
+        <Controller
+            name="tags"
+            control={control}
+            rules={{}}
+            render={({ field }) => (
+                <div style={{ width: '100%' }}>
+                    <Select {...field} options={TagUtils.flattenTags(tags, [])}
+                    />
+                </div>
+            )}
+        />
+
+
+    </VStack>
+    <Button
+        borderRadius="md"
+        bg="cyan.600"
+        _hover={{ bg: "cyan.200" }}
+        type="submit"
+    >
+        Save
+    </Button>
+</form>
+}
+
+function DisplayItem(props) {
+    return              <p>{props.item.description}</p>
+    {TagUtils.format(props.item, props.item.tags)}
+}
 
 export default function Builder() {
     const toast = useToast();
@@ -94,7 +147,7 @@ export default function Builder() {
                     else {
                         let lastItem = items[i]
                         if (ro.in)
-                            items.splice(i++, 0, { id: ro.period + i, description: `${ro.label}  ${ro.in} ` +
+                            items.splice(i++, 0, {summary: true,  id: ro.period + i, description: `${ro.label}  ${ro.in} ` +
                                 (ro.detail =='amount' ? `${ro.sum}` : `${ro.time}  ${ro.pomodoro}/${ro.brokenPomodoro + ro.pomodoro}`) })
                         ro.in = lastItem.dates[ro.period]
                         if (ro.detail == 'amount')
@@ -121,10 +174,10 @@ export default function Builder() {
 
         for (let ro of reportOptions) {
             if (ro.in )
-                items.splice(items.length, 0, { id: ro.period + 'last', description: `${ro.label}  ${ro.in} ` +
+                items.splice(items.length, 0, {summary: true,  id: ro.period + 'last', description: `${ro.label}  ${ro.in} ` +
                 (ro.detail =='amount' ? `${ro.sum}` : `${ro.time}  ${ro.pomodoro}/${ro.brokenPomodoro + ro.pomodoro}`)  })
             if (ro.period =='total')
-                items.splice(items.length, 0, { id: ro.period + 'last', description: `${ro.label}  ${items[0].dates.day}-${lastItem.dates.day} ` +
+                items.splice(items.length, 0, {summary: true,  id: ro.period + 'last', description: `${ro.label}  ${items[0].dates.day}-${lastItem.dates.day} ` +
                 (ro.detail =='amount' ? `${ro.sum}` : `${ro.time}  ${ro.pomodoro}/${ro.brokenPomodoro + ro.pomodoro}`) })
         }
         return items
@@ -177,11 +230,11 @@ export default function Builder() {
             qs += `&filters[description][$contains]=${getValues().partialDescription}`
 
         if (getValues().findTags) {
-/*             let family = TagUtils.family(getValues().findTags)
-            
+            let family = TagUtils.family(getValues().findTags)
+            console.log('family', family)
             for (let i = 0; i < family.length; i++) {
                 qs += `&filters[tags][id][$in][${i}]=${family[i].id}`
-            } */
+            }
         }
 
 
@@ -253,7 +306,7 @@ export default function Builder() {
                 <Button onClick={() => find()}>find</Button>
 
                
-                <Crud items={events} model='events' refreshList={find} />
+                <Crud items={events} model='events' refreshList={find} displayItem={DisplayItem } editForm={ EventForm }/>
 
             </SimpleGrid>
         </VStack>
