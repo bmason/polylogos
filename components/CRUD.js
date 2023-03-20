@@ -231,7 +231,11 @@ export default function Crud(props) {
                     <ModalCloseButton />
                     <ModalBody>
                         <Box   >
-                            <props.editForm />
+                            <props.editForm control={control}  
+                                errors={errors}  
+                                handleSubmit={handleSubmit}  
+                                register={register}   
+                                onSubmit={ onSubmit}/>
 
                         </Box>
                     </ModalBody>

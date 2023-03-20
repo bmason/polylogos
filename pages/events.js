@@ -31,34 +31,46 @@ import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
 import { Context } from  '../context/context';
 
+
+
 function EventForm(props) {
-    return                             <form onSubmit={handleSubmit(onSubmit)}>
+    const TagUtils = commonTagCode()
+    const [tags, setTags] = useState([]);
+    
+    useEffect(() => {
+        TagUtils.get(setTags)
+
+    }, [])
+
+
+
+    return                             <form onSubmit={props.handleSubmit(props.onSubmit)}>
     <VStack>
 
         <Input
             type="text"
             placeholder="description"
-            {...register("description", {
+            {...props.register("description", {
                 minLength: 3,
                 maxLength: 100
             })}
         />
-        {errors.description && <AlertPop title={errors.description.message} />}
+        {props.errors.description && <AlertPop title={errors.description.message} />}
 
         <Input
             type="text"
             placeholder="details"
-            {...register("details", {
+            {...props.register("details", {
                 minLength: 0,
                 maxLength: 100
             })}
         />
-        {errors.description && <AlertPop title={errors.description.message} />}
+        {props.errors.description && <AlertPop title={errors.description.message} />}
 
 
         <Controller
             name="tags"
-            control={control}
+            control={props.control}
             rules={{}}
             render={({ field }) => (
                 <div style={{ width: '100%' }}>
@@ -92,8 +104,8 @@ export default function Builder() {
     const [error, setError] = useState(null);
     const TagUtils = commonTagCode()
     const {
-        control,
         reset,
+        control,
         register,
         handleSubmit,
         getValues,

@@ -78,99 +78,97 @@ const Login = ({state}) => {
             });
     }
 
-    return (
-        <>
-            <h1>Login</h1>
-            <hr />
-            {alert && (
-                <div style={{ backgroundColor: "lightcoral" }}>
-                    <div dangerouslySetInnerHTML={{ __html: alert[1] }} />
-                </div>
+    return <>
+        <h1>Login</h1>
+        <hr />
+        {alert && (
+            <div style={{ backgroundColor: "lightcoral" }}>
+                <div dangerouslySetInnerHTML={{ __html: alert[1] }} />
+            </div>
+        )}
+        <br />
+        <Formik
+            initialValues={initialValues}
+            validationSchema={validationSchema}
+            onSubmit={(values, { setSubmitting, resetForm }) => onSubmit(values, { setSubmitting, resetForm })} >
+            { ({ isSubmitting, isValid }) => (
+                <Form>
+                    <div>
+                        <div><label htmlFor="identifier">Username or Email</label></div>
+                        <Field type="text" id="identifier" name="identifier" placeholder="Username or Email" />
+                        <div className="error"><ErrorMessage name="identifier" /></div>
+                    </div>
+
+                    <br />
+
+                    <div>
+                        <div><label htmlFor="password">Password</label></div>
+                        <Field type="password" id="password" name="password" placeholder="Password" />
+                        <div className="error"><ErrorMessage name="password" /></div>
+                        <small>
+                            <Link href="/api/auth/forgot-password">
+                                Forgot password?
+                            </Link>
+                        </small>
+                    </div>
+
+                    <br />
+
+                    <button 
+                        type="submit"
+                        disabled={!isValid} >
+                        {!isSubmitting && "Login"}
+                        {isSubmitting && "Loading..."}
+                    </button>
+                </Form>
             )}
-            <br />
-            <Formik
-                initialValues={initialValues}
-                validationSchema={validationSchema}
-                onSubmit={(values, { setSubmitting, resetForm }) => onSubmit(values, { setSubmitting, resetForm })} >
-                { ({ isSubmitting, isValid }) => (
-                    <Form>
-                        <div>
-                            <div><label htmlFor="identifier">Username or Email</label></div>
-                            <Field type="text" id="identifier" name="identifier" placeholder="Username or Email" />
-                            <div className="error"><ErrorMessage name="identifier" /></div>
-                        </div>
+        </Formik>
 
-                        <br />
-
-                        <div>
-                            <div><label htmlFor="password">Password</label></div>
-                            <Field type="password" id="password" name="password" placeholder="Password" />
-                            <div className="error"><ErrorMessage name="password" /></div>
-                            <small>
-                                <Link href="/api/auth/forgot-password">
-                                    <a>Forgot password?</a>
-                                </Link>
-                            </small>
-                        </div>
-
-                        <br />
-
-                        <button 
-                            type="submit"
-                            disabled={!isValid} >
-                            {!isSubmitting && "Login"}
-                            {isSubmitting && "Loading..."}
-                        </button>
-                    </Form>
-                )}
-            </Formik>
-
-          <Box>  <form onSubmit={() =>console.log('sub')}>
-        <VStack>
-          <Input
-            type="text"
-            placeholder="First name"
-            {...register("firstname", {
-              required: "Please enter first name",
-              minLength: 3,
-              maxLength: 80
-            })}
-          />
-          {errors.firstname && <AlertPop title={errors.firstname.message} />}
-          <Input
-            type="text"
-            placeholder="Last name"
-            {...register("lastname", {
-              required: "Please enter Last name",
-              minLength: 3,
-              maxLength: 100
-            })}
-          />
-  {errors.lastname && <AlertPop title={errors.lastname.message} />}
-          <Input
-            type="password"
-            placeholder="Password"
-            {...register("password", {
-              required: "Please enter Password",
-              minLength: { value: 8, message: "Too short" }
-            })}
-          />
-          {errors.password && <AlertPop title={errors.password.message} />}
+      <Box>  <form onSubmit={() =>console.log('sub')}>
+    <VStack>
+      <Input
+        type="text"
+        placeholder="First name"
+        {...register("firstname", {
+          required: "Please enter first name",
+          minLength: 3,
+          maxLength: 80
+        })}
+      />
+      {errors.firstname && <AlertPop title={errors.firstname.message} />}
+      <Input
+        type="text"
+        placeholder="Last name"
+        {...register("lastname", {
+          required: "Please enter Last name",
+          minLength: 3,
+          maxLength: 100
+        })}
+      />
+{errors.lastname && <AlertPop title={errors.lastname.message} />}
+      <Input
+        type="password"
+        placeholder="Password"
+        {...register("password", {
+          required: "Please enter Password",
+          minLength: { value: 8, message: "Too short" }
+        })}
+      />
+      {errors.password && <AlertPop title={errors.password.message} />}
 <AlertPop title={'errors.password.message'} />
-          <Button
-            borderRadius="md"
-            bg="cyan.600"
-            _hover={{ bg: "cyan.200" }}
-            variant="ghost"
-            type="submit"
-          >
-            Submit
-          </Button>
-        </VStack>
-      </form>     
-      </Box>       
-        </>
-    )
+      <Button
+        borderRadius="md"
+        bg="cyan.600"
+        _hover={{ bg: "cyan.200" }}
+        variant="ghost"
+        type="submit"
+      >
+        Submit
+      </Button>
+    </VStack>
+  </form>     
+  </Box>       
+    </>;
 }
 
 export default Login;
