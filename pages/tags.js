@@ -24,18 +24,21 @@ import {
 
   //import { ErrorMessage } from "@hookform/error-message";
   import AlertPop from "../components/alertPop";
-  import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import axios from '../lib/axios';
   import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
+  import {useTags} from '../providers/Tag'
   
+
+
   export default function Builder() {
     const toast = useToast();
     const [data, setData] = useState();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [error, setError] = useState(null);
     const [tags, setTags] = useState([]);
-    const TagUtils = commonTagCode()
+
+    const Tags = useTags()
     const {
       control,
       reset,
@@ -45,12 +48,10 @@ import {
       formState: { errors }
     } = useForm();
 
-  
-
     const onSubmit = (data) => { console.log('submit', data)
       if(opTag)
         data.id = opTag.id
-      TagUtils.store(data, tagUpdated, setError)
+   //   TagUtils.store(data, tagUpdated, setError)
 
 
  
@@ -60,14 +61,15 @@ import {
 
 
     useEffect(() => {
-        TagUtils.get(setTags)
+        console.log('getLIST', Tags.getList())
+    //    TagUtils.get(setTags)
 
       }, [])
 
     const [opTag, setOpTag] = useState();
 
 function deleteTag(){ console.log(alertProps)
-  TagUtils.delete(opTag.id, setTags)
+  //TagUtils.delete(opTag.id, setTags)
   alertClose()
 }
 function promptDeleteTag(tag) { 
@@ -141,7 +143,7 @@ const cancelRef = React.useRef()
  
 
    const tagUpdated = () => {
-    TagUtils.get(setTags)
+    //TagUtils.get(setTags)
     onClose()
     reset()
     toast({
@@ -169,7 +171,7 @@ const cancelRef = React.useRef()
 >
 <IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
 
-{tagHierarchy(tags)}
+{tagHierarchy(Tags.getTree())}
 
 </SimpleGrid> 
 
@@ -240,7 +242,7 @@ const cancelRef = React.useRef()
             rules={{ }}
             render={({ field }) => (
               <div style={{width: '100%'}}>
-                <Select {...field}  options={TagUtils.flattenTags(tags, [])}
+                <Select {...field}  options={Tags.getList()}
                 />
               </div>
             )}

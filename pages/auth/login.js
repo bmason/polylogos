@@ -6,7 +6,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 
 
-import { VStack, Input, useToast, Box, Button } from "@chakra-ui/react";
+import { VStack, Input, useToast, Box, Button, Center } from "@chakra-ui/react";
 
 import { useForm } from "react-hook-form";
 import AlertPop from "../../components/alertPop";
@@ -28,6 +28,7 @@ const Login = ({state}) => {
     const {
         register,
         handleSubmit,
+        values,
         formState: { errors }
       } = useForm();
 
@@ -36,7 +37,7 @@ const Login = ({state}) => {
         password: Yup.string().required("Required")
     });
 
-    const onSubmit = (values, { setSubmitting, resetForm }) => {
+    const onSubmit = (values, { setSubmitting, resetForm }) => { console.log('submit', values)
         setAlert();
 
         axios
@@ -48,10 +49,11 @@ const Login = ({state}) => {
                 localStorage.setItem('jwt', jwt);
                 localStorage.setItem('username', username);
                 localStorage.setItem('userId', response.data.user.id);
+                localStorage.setItem('userEmail', response.data.user.email);                
                 state.setIsLogged(true)
 
                 push('/');
-                resetForm();
+                //resetForm();
             })
             .catch(error => {
                 if ( !error.response.data.message ) {
@@ -73,79 +75,28 @@ const Login = ({state}) => {
                     setAlert(['alert', list]);
                 }
             })
-            .finally(() => {
-                setSubmitting(false);
-            });
+
     }
 
     return <>
-        <h1>Login</h1>
-        <hr />
-        {alert && (
-            <div style={{ backgroundColor: "lightcoral" }}>
-                <div dangerouslySetInnerHTML={{ __html: alert[1] }} />
-            </div>
-        )}
-        <br />
-        <Formik
-            initialValues={initialValues}
-            validationSchema={validationSchema}
-            onSubmit={(values, { setSubmitting, resetForm }) => onSubmit(values, { setSubmitting, resetForm })} >
-            { ({ isSubmitting, isValid }) => (
-                <Form>
-                    <div>
-                        <div><label htmlFor="identifier">Username or Email</label></div>
-                        <Field type="text" id="identifier" name="identifier" placeholder="Username or Email" />
-                        <div className="error"><ErrorMessage name="identifier" /></div>
-                    </div>
 
-                    <br />
 
-                    <div>
-                        <div><label htmlFor="password">Password</label></div>
-                        <Field type="password" id="password" name="password" placeholder="Password" />
-                        <div className="error"><ErrorMessage name="password" /></div>
-                        <small>
-                            <Link href="/api/auth/forgot-password">
-                                Forgot password?
-                            </Link>
-                        </small>
-                    </div>
+    <Center >
+      <Box maxW='sm' padding='5px' borderWidth='2px' borderRadius='lg' overflow='hidden'>  
 
-                    <br />
-
-                    <button 
-                        type="submit"
-                        disabled={!isValid} >
-                        {!isSubmitting && "Login"}
-                        {isSubmitting && "Loading..."}
-                    </button>
-                </Form>
-            )}
-        </Formik>
-
-      <Box>  <form onSubmit={() =>console.log('sub')}>
+      <form onSubmit={handleSubmit(onSubmit)}>
     <VStack>
+
       <Input
         type="text"
-        placeholder="First name"
-        {...register("firstname", {
-          required: "Please enter first name",
-          minLength: 3,
-          maxLength: 80
-        })}
-      />
-      {errors.firstname && <AlertPop title={errors.firstname.message} />}
-      <Input
-        type="text"
-        placeholder="Last name"
-        {...register("lastname", {
-          required: "Please enter Last name",
+        placeholder="Username or Email"
+        {...register("identifier", {
+          required: "Please enter Username or Email",
           minLength: 3,
           maxLength: 100
         })}
       />
-{errors.lastname && <AlertPop title={errors.lastname.message} />}
+      {errors.identifier && <AlertPop title={errors.lastname.message} />}
       <Input
         type="password"
         placeholder="Password"
@@ -155,7 +106,7 @@ const Login = ({state}) => {
         })}
       />
       {errors.password && <AlertPop title={errors.password.message} />}
-<AlertPop title={'errors.password.message'} />
+
       <Button
         borderRadius="md"
         bg="cyan.600"
@@ -163,11 +114,12 @@ const Login = ({state}) => {
         variant="ghost"
         type="submit"
       >
-        Submit
+        Login
       </Button>
     </VStack>
   </form>     
-  </Box>       
+  </Box>     
+  </Center>  
     </>;
 }
 

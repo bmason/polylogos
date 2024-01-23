@@ -43,6 +43,9 @@ const NavLink = ({ children, fs }) => (
 
 export default function Simple({state, children}) {
   const { isOpen, onOpen, onClose } = useDisclosure();
+  var md5 = require('md5');
+
+//console.log('email ', localStorage.getItem('userEmail'))
 
   const { colorMode, toggleColorMode } = useColorMode()
 
@@ -116,7 +119,7 @@ export default function Simple({state, children}) {
               <Avatar
                 size={'sm'}
                 src={
-                  'https://www.gravatar.com/avatar/14949f3e63e99a01eb444d7416e7a1409&s=100'
+                  `https://www.gravatar.com/avatar/${md5(/* localStorage.getItem('userEmail') || */ 'smalltalkman@gmail.com')}?size=100)`
                 }
               />
             </MenuButton>

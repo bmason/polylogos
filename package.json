@@ -16,6 +16,7 @@
     "formik": "^2.2.9",
     "framer-motion": "^6.5.1",
     "install": "^0.13.0",
+    "md5": "^2.3.0",
     "next": "^13.1.6",
     "next-redux-wrapper": "^8.1.0",
     "react": "^18.2.0",
@@ -28,6 +29,7 @@
     "yup": "^0.32.11"
   },
   "devDependencies": {
+    "@types/node": "20.11.5",
     "eslint": "7",
     "eslint-config-next": "^12.0.4"
   }

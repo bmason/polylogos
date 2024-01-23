@@ -13,13 +13,13 @@ export default function CommonCode () {
 
 
         {
-            get: function (storeTags) {  console.log('get tags', context)
+            get: function (storeTags) { // console.log('get tags', context)
 
                 let oTags = []
 
                 if (context.treeTags.size || (typeof localStorage == 'undefined'))
                     return storeTags(context.listTags)
-   console.log('axios', context)   
+   //console.log('axios', context)   
 
                 axios
                 .get('/api/tags?pagination[limit]=-1', {
@@ -36,7 +36,7 @@ export default function CommonCode () {
                     //localStorage.setItem('logosTags', JSON.stringify(oTags))
                     //setTags(oTags) 
 
-             console.log('o tags', oTags)     
+             //console.log('o tags', oTags)     
 
                     return storeTags(oTags)
                 })
@@ -149,7 +149,7 @@ export default function CommonCode () {
 
                 return context.listTags
             },
-            flattenTags: function(roots, list) { console.log("roots", roots)
+            flattenTags: function(roots, list) { //console.log("roots", roots)
                 let ordered = roots.sort((a,b) => a.name > b.name ? 1 : -1)
 
                 for (let e of ordered) {  
@@ -266,7 +266,7 @@ export default function CommonCode () {
         
         )}, [])
         //context.listTags = [{value: 1, label:'test'}]
-console.log('ue done')
+//console.log('ue done')
         return (tagFunctions)
     }
 

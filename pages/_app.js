@@ -5,7 +5,7 @@ import Layout from '../components/layout';
 import { useState } from "react";
 import 'react-quill/dist/quill.snow.css';
 import { Context } from  '../context/context';
-
+import { TagProvider } from '../providers/Tag'
 
 
 function MyApp({ Component, pageProps }) {
@@ -15,11 +15,11 @@ function MyApp({ Component, pageProps }) {
   return (
     <Context.Provider value={[context, setContext]}>
     <ChakraProvider theme={customTheme}>
-          <Layout state={{isLogged: isLogged, setIsLogged: setIsLogged}}>
-
-        <Component state={{isLogged: isLogged, setIsLogged: setIsLogged}} {...pageProps} />
-
-    </Layout>
+      <TagProvider>
+        <Layout state={{isLogged: isLogged, setIsLogged: setIsLogged}}>
+          <Component state={{isLogged: isLogged, setIsLogged: setIsLogged}} {...pageProps} />
+        </Layout>
+      </TagProvider>
     </ChakraProvider>
     </Context.Provider>
   );

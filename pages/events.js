@@ -44,7 +44,7 @@ function EventForm(props) {
 
 
 
-    return                             <form onSubmit={props.handleSubmit(props.onSubmit)}>
+    return      <form onSubmit={props.handleSubmit(props.onSubmit)}>
     <VStack>
 
         <Input
@@ -234,12 +234,14 @@ export default function Builder() {
     function find() {
         console.log('values', getValues())
 
-
-
         let qs = ''
 
         if (getValues().partialDescription)
             qs += `&filters[description][$contains]=${getValues().partialDescription}`
+
+        if (getValues().afterDate) {
+            qs += `&filters[createdAt][$gt]=${getValues().afterDate}`
+        }   
 
         if (getValues().findTags) {
             let family = TagUtils.family(getValues().findTags)
@@ -268,7 +270,7 @@ export default function Builder() {
                 console.log('events after process ', data.data)
                 data.data.sort((a, b) => getDatesFromItem(a).sortDate > getDatesFromItem(b).sortDate ? 1 : -1)
                 //setEvents(spliceSummaryInto(data.data, [{ period: 'month', detail: 'amount', label: 'monthly amount' }, { period: 'total', detail: 'amount', label: 'total amount' }]))
-                setEvents(spliceSummaryInto(data.data, [{ period: 'day', detail: 'pomodoro', label: 'daily pomodoro' },{ period: 'week', detail: 'pomodoro', label: 'weekly pomodoro' }, { period: 'total', detail: 'pomodoro', label: 'pomodoro total' }]))
+                setEvents(data.data);  //spliceSummaryInto(data.data, [{ period: 'day', detail: 'pomodoro', label: 'daily pomodoro' },{ period: 'week', detail: 'pomodoro', label: 'weekly pomodoro' }, { period: 'total', detail: 'pomodoro', label: 'pomodoro total' }]))
             })
             .catch((error) => console.log(error)) //(error) => fail(error))
 
@@ -302,7 +304,16 @@ export default function Builder() {
                         minLength: 3,
                         maxLength: 100
                     })}
-                />                
+                />  
+
+                <Input
+                    type="date"
+                    placeholder="on or after"
+                    {...register("afterDate", {
+
+                    })}
+                /> 
+
 
                 <Controller
                     name="findTags"
