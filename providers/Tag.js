@@ -10,6 +10,7 @@ export const TagProvider =  ({ children }) => {
 
     const [list, setList] = useState([])
     const [tree, setTree] = useState([])
+    const [map, setMap] = useState()
 
     const fetchSortTags = () => {
         axios
@@ -26,6 +27,7 @@ export const TagProvider =  ({ children }) => {
           let tagMap = new Map()
 
           let cTags = data.data.map(e=>{e.key=e.id; tagMap.set(e.id, e); return e})
+          setMap(tagMap)
 
           let context = new Map();
           
@@ -61,6 +63,10 @@ export const TagProvider =  ({ children }) => {
 
     }
 
+    const findById = (id) => {
+      return map.get(id)
+    }     
+
     const getList = () => { //console.log('getList')
         
         if (!list || list.length == 0) {console.log('getting')
@@ -79,7 +85,7 @@ export const TagProvider =  ({ children }) => {
     }
 
     return (
-        <Context.Provider  value={{ getList, getTree  }}>
+        <Context.Provider  value={{ getList, getTree, findById }}>
             {children}
         </Context.Provider>
      )

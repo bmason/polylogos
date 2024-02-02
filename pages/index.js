@@ -5,6 +5,8 @@ import axios from '../lib/axios';
 import commonCode from "../components/commonTagCode";
 import Head from "next/head"
 
+import {toLocalISOString} from '../lib/date'
+
 import {
     useDisclosure,
     Modal,
@@ -81,7 +83,10 @@ const Homepage = () => {
         console.log('data', data, getValues())
 
         //return
-        let event = {'description': data.description, 'note':data.note, complete: true}
+        let event = {'dateTime': data.dateTime, 'description': data.description, 'note':data.note, complete: true}
+
+        event.dateTime = new Date(event.dateTime).toISOString()
+
 
         if (data.tags) {
           event.tags = data.tags.map(e => e.id)
@@ -131,12 +136,10 @@ const Homepage = () => {
             <HStack w='100%'  key={e.id+tagField.title}>  
                 <Box w={tagField.type == 'currency' ? '70%' : '100%'} >
                     <Input
-                        type={tagField.type == 'currency' ? 'number' : 'date'}
+                        type={tagField.type == 'currency' ? 'number' : 'number'}
                         placeholder={tagField.title}
                         {...register(tagField.title, {})}
-                       defaultValue = {tagField.type == 'date'  
-                        ? new Date().toISOString().substring(0,10)
-                        : null}
+
                     />
                 </Box>
                 {tagField.type == 'currency' &&
@@ -179,11 +182,13 @@ const Homepage = () => {
       }, []) 
 
 
- 
+
     
 
     const [displayTags, setdisplayTags] = useState([])
-    
+
+
+  
     
    const openDialog = () => {
     reset()
@@ -268,6 +273,15 @@ function handleTagChange(e) {
             />
             {errors.name && <AlertPop title={errors.name.message} />}
             <Input
+              type="datetime-local"
+              {...register("dateTime", {
+              })}
+              step="any"
+              defaultValue={toLocalISOString()}
+            />
+
+
+            <Input
               type="text"
               placeholder="note"
               {...register("note", {
@@ -275,6 +289,8 @@ function handleTagChange(e) {
                 maxLength: 100
               })}
             />
+
+
     {errors.description && <AlertPop title={errors.description.message} />}
 
 

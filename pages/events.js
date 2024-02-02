@@ -21,6 +21,7 @@ import {
 } from '@chakra-ui/react'
 import { VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
+import {useTags} from '../providers/Tag'
 
 //import { ErrorMessage } from "@hookform/error-message";
 import AlertPop from "../components/alertPop";
@@ -30,7 +31,7 @@ import Select from "react-select";
 import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
 import { Context } from  '../context/context';
-
+import { toLocalDateTime } from '../lib/date'
 
 
 function EventForm(props) {
@@ -42,8 +43,8 @@ function EventForm(props) {
 
     }, [])
 
-
-
+    const Tags = useTags()
+console.log('edit props ', props)
     return      <form onSubmit={props.handleSubmit(props.onSubmit)}>
     <VStack>
 
@@ -65,6 +66,14 @@ function EventForm(props) {
                 maxLength: 100
             })}
         />
+        <Input
+            type="datetime-local"
+
+            {...props.register("dateTime", {
+
+            })}
+        />
+
         {props.errors.description && <AlertPop title={errors.description.message} />}
 
 
@@ -93,10 +102,24 @@ function EventForm(props) {
 </form>
 }
 
-function DisplayItem(props) {
-    return              <p>{props.item.description}</p>
-    {TagUtils.format(props.item, props.item.tags)}
-}
+
+
+function DisplayItem(props) { 
+    const Tags = useTags()
+    if (props.item.details && props.item.details.constructor === String)
+        props.item.details = JSON.parse(props.item.details)
+
+    if (!props.item.description)
+        props.item.description = props.item.details.dose + ' ' + props.item.tags[0].name     
+        
+
+    return     (
+        <>
+        <p>{props.item.description}</p>
+        <p>{props.item.dateTime || props.item.details.date }  {props.item.details && props.item.details.currency}{props.item.details && props.item.details.amount}</p>
+    
+    </>  
+    )}
 
 export default function Builder() {
     const toast = useToast();
@@ -177,7 +200,6 @@ export default function Builder() {
 
                     }
 
-
                 }
             }
         }
@@ -228,11 +250,14 @@ export default function Builder() {
 
     const cancelRef = React.useRef()
 
-
+    function eventSort(a, b, ascending=true) {
+        return a.dateTimeISO < b.dateTimeISO ? -1 : (a.dateTimeISO == b.dateTimeISO ? 0 : 1) 
+    }
 
 
     function find() {
         console.log('values', getValues())
+ 
 
         let qs = ''
 
@@ -262,13 +287,19 @@ export default function Builder() {
 
                 data.data.forEach(e => { //replace with find
                     Object.assign(e, e.attributes)
-                    e.details = JSON.parse(e.details)
+                    e.details = JSON.parse(e.details) || {}
+                    //e.dateTime = new Date(new Date(e.dateTime).getTime() - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0, 19);                     
+                    e.dateTimeISO = e.dateTime || e.details.date
+
+                    e.dateTime = toLocalDateTime(e.dateTime)
+
                     e.tags = e.tags.data
                     e.tags.forEach(f => Object.assign(f, f.attributes))
-                    
+                
                 })
                 console.log('events after process ', data.data)
-                data.data.sort((a, b) => getDatesFromItem(a).sortDate > getDatesFromItem(b).sortDate ? 1 : -1)
+                data.data.sort(eventSort)
+                //data.data.sort((a, b) => getDatesFromItem(a).sortDate > getDatesFromItem(b).sortDate ? 1 : -1)
                 //setEvents(spliceSummaryInto(data.data, [{ period: 'month', detail: 'amount', label: 'monthly amount' }, { period: 'total', detail: 'amount', label: 'total amount' }]))
                 setEvents(data.data);  //spliceSummaryInto(data.data, [{ period: 'day', detail: 'pomodoro', label: 'daily pomodoro' },{ period: 'week', detail: 'pomodoro', label: 'weekly pomodoro' }, { period: 'total', detail: 'pomodoro', label: 'pomodoro total' }]))
             })
@@ -329,7 +360,7 @@ export default function Builder() {
                 <Button onClick={() => find()}>find</Button>
 
                
-                <Crud items={events} model='events' refreshList={find} displayItem={DisplayItem } editForm={ EventForm }/>
+                <Crud items={events} model='events' refreshList={find} sort={eventSort} displayItem={DisplayItem } editForm={ EventForm }/>
 
             </SimpleGrid>
         </VStack>
