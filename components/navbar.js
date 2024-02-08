@@ -25,7 +25,7 @@ import {
   Stack,
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
-
+import { useAuth} from '../providers/Auth'
 
 const Links = [{label:'Dashboard', href: '/'}, {label:'Activities', href:'activities'},{label:'Events', href:'/events'} ,{label:'Tags', href:'/tags'}];
 
@@ -45,32 +45,28 @@ export default function Simple({state, children}) {
   const { isOpen, onOpen, onClose } = useDisclosure();
   var md5 = require('md5');
 
-//console.log('email ', localStorage.getItem('userEmail'))
-
   const { colorMode, toggleColorMode } = useColorMode()
+  const { user, logout } = useAuth()
 
-  useEffect(() => {
-      state.setIsLogged(!!localStorage.getItem('jwt'));
-  }, []);
   const { push } = useRouter();
   return <>
   
     <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
 
-    {state.isLogged === null &&
+    {user === null &&
       <Center width={'100vw'}>  <Spinner />  </Center>
     }
 
-    {state.isLogged === false &&      
+    {!user &&      
               <HStack style={{ display: "flex", columnGap: "20px", justifyContent: "end" }}>
-                  {state.isLogged === false && 
+                  {!user && 
                       <Button>
                           <Link href="/auth/register">
                               Register
                           </Link>
                       </Button>
                   }
-                   {state.isLogged === false && 
+                   {!user && 
                                 <Button>
                             
                                 <Link href="/auth/login">
@@ -87,7 +83,7 @@ export default function Simple({state, children}) {
         { colorMode === 'light' ? <MoonIcon/> : <SunIcon/> }
       </IconButton>
       </Box>
-      {state.isLogged && <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
+      {user && <Flex h={16} alignItems={'center'} justifyContent={'space-between'}>
 
         
         <IconButton
@@ -98,7 +94,7 @@ export default function Simple({state, children}) {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems={'center'}>
-          <Box><img src="/PLLogo.png" /></Box>
+          <Box><Image width="155" height="67" src="/PLLogo.png" /></Box>
           <HStack
             as={'nav'}
             spacing={4}
@@ -109,7 +105,7 @@ export default function Simple({state, children}) {
           </HStack>
         </HStack>
         <Flex alignItems={'center'}>
-          { state.isLogged && <Menu>
+          { user && <Menu>
             <MenuButton
               as={Button}
               rounded={'full'}
@@ -119,7 +115,7 @@ export default function Simple({state, children}) {
               <Avatar
                 size={'sm'}
                 src={
-                  `https://www.gravatar.com/avatar/${md5(/* localStorage.getItem('userEmail') || */ 'smalltalkman@gmail.com')}?size=100)`
+                  `https://www.gravatar.com/avatar/${md5(/*user.email*/ 'smalltalkman@gmail.com')}?size=100)`
                 }
               />
             </MenuButton>
@@ -128,9 +124,7 @@ export default function Simple({state, children}) {
 
 
                     
-                        localStorage.removeItem('jwt');
-                        localStorage.removeItem('username');
-                        state.setIsLogged(false)
+                       logout()
                         push('/');}}>
                 Logoff
               </MenuItem>

@@ -28,19 +28,22 @@ import { IoStop } from 'react-icons/io5';
 
 //import { ErrorMessage } from "@hookform/error-message";
 import AlertPop from "../components/alertPop";
-import commonTagCode from "../components/commonTagCode";
 import Select from "react-select";
 import axios from '../lib/axios';
+import dateUtils from '../lib/date'
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
 import { CLIENT_STATIC_FILES_RUNTIME_REACT_REFRESH } from "next/dist/shared/lib/constants";
+import { useTags } from '../providers/Tag'
+import { useAuth } from '../providers/Auth'
 
 export default function Builder({ state }) {
   const toast = useToast();
   const [data, setData] = useState();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [error, setError] = useState(null);
-  const [tags, setTags] = useState([]);
-  const TagUtils = commonTagCode()
+  const Tags = useTags()
+  const { jwt, user } = useAuth();
+
   const {
     control,
     reset,
@@ -64,7 +67,7 @@ export default function Builder({ state }) {
       event.tags = data.tags.map(e => e.id)
 
       event.details = {}
-      TagUtils.withParents(data.tags).forEach(e => {
+      Tags.allDetails(data.tags).forEach(e => {
         if (e.details && e.details.fields)
           e.details.fields.forEach(f => event.details[f.title] = data[f.title])
       })
@@ -73,12 +76,12 @@ export default function Builder({ state }) {
     event.details = JSON.stringify(event.details)
     console.log('event ', event)
 
-    event.userId = localStorage.getItem('userId')
+    event.userId = user.id
     event.complete = true
 
     axios
       .post('http://localhost:1337/api/events', { data: event }, {
-        headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+        headers: { 'Authorization': `bearer ${jwt}` }
       })
       .then(({ data }) => {//console.log('tags', data); 
         onClose()
@@ -138,11 +141,11 @@ export default function Builder({ state }) {
 
 
 
-    TagUtils.get(setTags)
+    Tags.getList()
 
     axios
       .get('/api/activities?populate=tags,events', {
-        headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+        headers: { 'Authorization': `bearer ${jwt}` }
       })
       .then(({ data }) => {     console.log('act', data)    
 
@@ -206,14 +209,14 @@ export default function Builder({ state }) {
 
     let event
     if (!startedEvent) {
-      event = {activity: e.id, userId: localStorage.getItem('userId') ,tags: e.tags.data.map(f=>f.id), complete: false, details: {pomodoroStart: (new Date()).toISOString()}}
+      event = {activity: e.id, userId: user.id ,tags: e.tags.data.map(f=>f.id), complete: false, details: {pomodoroStart: (new Date()).toISOString()}}
 
     let updateEvent = {...event}
     updateEvent.details = JSON.stringify(event.details)
 console.log('update', updateEvent)
     axios
     .post('/api/events',{data: updateEvent}, {
-      headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+      headers: { 'Authorization': `bearer ${jwt}` }
     })
     .then(({ data }) => {  console.log('event', data)    
       event.id = data.data.id
@@ -258,7 +261,7 @@ function displayTime() {
       spawnNotification('break time 🏖', '/favicon.ico', 'Pomodoro')
     }
 
-    let newTime = TagUtils.displayTime(timeRemaining)
+    let newTime = displayTime(timeRemaining)
     document.title = (newTime.negative ? '🏖': '🖥️') + newTime.timeString
     newTime.timeString = document.title
     setTimerString(newTime)
@@ -319,7 +322,7 @@ function pomodoroWrite (activity) {  //console.log('act', activity)
 
   axios
   .put(`/api/events/${activity.openEvent.id}`,{data: updateEvent}, {
-    headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+    headers: { 'Authorization': `bearer ${jwt}` }
   })
   .then(({ data }) => {  //console.log('event', data)    
 

@@ -4,7 +4,7 @@ import * as Yup from 'yup';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { useRouter } from 'next/router';
 import Link from 'next/link';
-
+import { useAuth } from '../../providers/Auth'
 
 import { VStack, Input, useToast, Box, Button, Center } from "@chakra-ui/react";
 
@@ -19,6 +19,7 @@ import AlertPop from "../../components/alertPop";
 const Login = ({state}) => {
     const { push } = useRouter();
     const [alert,setAlert] = useState();
+    const { jwt,user,login } = useAuth();
 
     const initialValues = {
         identifier: "",
@@ -37,45 +38,12 @@ const Login = ({state}) => {
         password: Yup.string().required("Required")
     });
 
-    const onSubmit = (values, { setSubmitting, resetForm }) => { console.log('submit', values)
+    const  onSubmit = async (values) => { console.log('submit', values)
         setAlert();
 
-        axios
-            .post('/api/auth/local', values)
-            .then(response => {
-                const jwt = response.data.jwt;
-                const username = response.data.user.username;
-
-                localStorage.setItem('jwt', jwt);
-                localStorage.setItem('username', username);
-                localStorage.setItem('userId', response.data.user.id);
-                localStorage.setItem('userEmail', response.data.user.email);                
-                state.setIsLogged(true)
-
-                push('/');
-                //resetForm();
-            })
-            .catch(error => {
-                if ( !error.response.data.message ) {
-                    setAlert(['alert', "Something went wrong"])
-                } else {
-                    const messages = error.response.data.message[0].messages;
-
-                    const list = [];
-                    messages.map((message,i) => {
-                        let item = "";
-                        if (i === 0) item += `<ul>`;
-                        
-                        item += `<li>${message.id}</li>`;
-
-                        if (i === messages.length - 1) item += `</ul>`
-                        list.push(item);
-                    });
-
-                    setAlert(['alert', list]);
-                }
-            })
-
+      await login(values)
+      console.log (jwt, user)
+      push('/');
     }
 
     return <>

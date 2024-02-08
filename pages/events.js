@@ -25,25 +25,23 @@ import {useTags} from '../providers/Tag'
 
 //import { ErrorMessage } from "@hookform/error-message";
 import AlertPop from "../components/alertPop";
-import commonTagCode from "../components/commonTagCode";
 import Crud from "../components/CRUD";
 import Select from "react-select";
 import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
 import { Context } from  '../context/context';
 import { toLocalDateTime } from '../lib/date'
+import { useAuth } from '../providers/Auth'
+
+
+
 
 
 function EventForm(props) {
-    const TagUtils = commonTagCode()
-    const [tags, setTags] = useState([]);
-    
-    useEffect(() => {
-        TagUtils.get(setTags)
-
-    }, [])
-
     const Tags = useTags()
+    
+
+
 console.log('edit props ', props)
     return      <form onSubmit={props.handleSubmit(props.onSubmit)}>
     <VStack>
@@ -68,9 +66,9 @@ console.log('edit props ', props)
         />
         <Input
             type="datetime-local"
-
+            step="any"
             {...props.register("dateTime", {
-
+                
             })}
         />
 
@@ -83,7 +81,7 @@ console.log('edit props ', props)
             rules={{}}
             render={({ field }) => (
                 <div style={{ width: '100%' }}>
-                    <Select {...field} options={TagUtils.flattenTags(tags, [])}
+                    <Select {...field}  isMulti={true} options={Tags.getList()}
                     />
                 </div>
             )}
@@ -109,9 +107,13 @@ function DisplayItem(props) {
     if (props.item.details && props.item.details.constructor === String)
         props.item.details = JSON.parse(props.item.details)
 
-    if (!props.item.description)
-        props.item.description = props.item.details.dose + ' ' + props.item.tags[0].name     
-        
+    if (!props.item.description) {
+        if ( props.item.details && props.item.details.dose)
+            props.item.description = props.item.details.dose + ' ' + props.item.tags[0].name     
+        else (
+            props.item.dateTime = (new Date(props.item.createdAt)).toLocaleDateString()
+        )
+    }
 
     return     (
         <>
@@ -125,7 +127,8 @@ export default function Builder() {
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [error, setError] = useState(null);
-    const TagUtils = commonTagCode()
+    const Tags = useTags()
+
     const {
         reset,
         control,
@@ -142,6 +145,7 @@ export default function Builder() {
     const [selectedOptions, setSelectedOptions] = useState();
     const [events, setEvents] = useState([]);
     const [context, setContext ] = useContext(Context)
+    const { jwt, user } = useAuth();
 
 /*     useEffect(() => {
         TagUtils.get(setTags)
@@ -269,17 +273,17 @@ export default function Builder() {
         }   
 
         if (getValues().findTags) {
-            let family = TagUtils.family(getValues().findTags)
+            let family = Tags.family(getValues().findTags)
             console.log('family', family)
             for (let i = 0; i < family.length; i++) {
-                qs += `&filters[tags][id][$in][${i}]=${family[i].id}`
+                qs += `&filters[tags][id][$in][${i}]=${family[i]}`
             }
         }
 
-
+console.log('qs', qs)
         axios
             .get('/api/events?populate=activity,tags&pagination[limit]=-1' + qs, {
-                headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+                headers: { 'Authorization': `bearer ${jwt}` }
             })
             .then(({ data }) => {
 
@@ -352,7 +356,7 @@ export default function Builder() {
                     rules={{}}
                     render={({ field }) => (
                         <div style={{ width: '100%' }}>
-                            <Select placeholder='search by tag' {...field} instanceId='findTags' options={TagUtils.optionList()}
+                            <Select placeholder='search by tag' {...field} instanceId='findTags' options={Tags.getList()}
                             />
                         </div>
                     )}

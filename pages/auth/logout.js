@@ -1,12 +1,11 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useAuth } from '../../providers/Auth'
 
 const Logout = () => {
     const { push } = useRouter();
 
     useEffect(() => {
-        localStorage.removeItem('jwt');
-        localStorage.removeItem('username');
         push('/');
     }, [push]);
 

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useId } from 'react';
 import Link from 'next/link';
 
 import axios from '../lib/axios';
-import commonCode from "../components/commonTagCode";
 import Head from "next/head"
 
 import {toLocalISOString} from '../lib/date'
@@ -23,26 +22,17 @@ import {
 
   //import { ErrorMessage } from "@hookform/error-message";
   import AlertPop from "../components/alertPop";
-  import commonTagCode from "../components/commonTagCode";
   import Select from "react-select";
   import { PhoneIcon, AddIcon, WarningIcon } from '@chakra-ui/icons'
-import { setNestedObjectValues } from 'formik';
-
-
+  import { setNestedObjectValues } from 'formik';
+  import { useAuth } from '../providers/Auth'
+  import {useTags} from '../providers/Tag'
   
 
 
 const Homepage = () => {
 
-
-
-
-    const [isLogged, setIsLogged] = useState();
-
-    useEffect(() => {
-        setIsLogged(!!localStorage.getItem('jwt'));
-    }, []);
-
+  const { jwt, user } = useAuth()
     const flexSettings = {
         flex: "1",
         minW: "300px",
@@ -67,7 +57,8 @@ const Homepage = () => {
       const { isOpen, onOpen, onClose } = useDisclosure();
       const [error, setError] = useState(null);
       const [tags, setTags] = useState([]);
-      const TagUtils = commonTagCode()
+      const Tags = useTags()
+
       const {
         control,
         reset,
@@ -92,12 +83,11 @@ const Homepage = () => {
           event.tags = data.tags.map(e => e.id)
 
             event.details = {}
-            TagUtils.withParents(data.tags).forEach(e => {
-                if (e.details && e.details.fields) 
-                    e.details.fields.forEach(f => {event.details[f.title] = data[f.title]
-                      if (f.type == 'currency')
-                        event.details.currency = data.currency ? data.currency.id : f.defaultCurrency
-                    })
+            Tags.allDetails(data.tags).forEach(e => {
+                event.details[e.title] = data[e.title]
+                if (e.type == 'currency')
+                  event.details.currency = data.currency ? data.currency.id : e.defaultCurrency
+                  
             })
         }
           
@@ -105,12 +95,12 @@ const Homepage = () => {
         event.details = JSON.stringify(event.details)
         console.log('event ', event) 
 
-        event.userId = localStorage.getItem('userId')
+        event.userId = user.id
         event.complete = true
         
         axios
         .post('/api/events', {data: event}, {
-          headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+          headers: { 'Authorization': `bearer ${jwt}` }
         })
         .then(({ data }) => {//console.log('tags', data); 
             onClose()
@@ -128,21 +118,19 @@ const Homepage = () => {
     const [selectedOptions, setSelectedOptions] = useState(); 
 
 
-    function details (displayTags) { 
-
-        let fieldTags = displayTags.filter(e => e.details && e.details.fields) 
-
-        return (fieldTags.map(e => e.details.fields.map(tagField =>
-            <HStack w='100%'  key={e.id+tagField.title}>  
-                <Box w={tagField.type == 'currency' ? '70%' : '100%'} >
+    function details (fieldTags) { 
+console.log('fields', fieldTags)
+        return (fieldTags.map(e => {console.log(e);
+           return (<HStack w='100%'  key={e.title}>  
+                <Box w={e.type == 'currency' ? '70%' : '100%'} >
                     <Input
-                        type={tagField.type == 'currency' ? 'number' : 'number'}
-                        placeholder={tagField.title}
-                        {...register(tagField.title, {})}
+                        type={e.type == 'currency' ? 'number' : 'number'}
+                        placeholder={e.title}
+                        {...register(e.title, {})}
 
                     />
                 </Box>
-                {tagField.type == 'currency' &&
+                {e.type == 'currency' &&
                   <Box w='30%'>
                     <Controller
                         name="currency"
@@ -154,32 +142,21 @@ const Homepage = () => {
                                 {...field}   
                           
                                 options={[{id: 'THB', label:'THB'}, {id:'USD', label:'USD'}]}
-                                defaultValue={{id: tagField.defaultCurrency, label: tagField.defaultCurrency}}
+                                defaultValue={{id: e.defaultCurrency, label: e.defaultCurrency}}
                             />
 
                         )}
                     />
                   </Box>  
                 }
-            </HStack>))).flat()
+            </HStack>)}))
     }
 
     useEffect(() => {
-        TagUtils.get(setTags)
+        Tags.getList()
         setdisplayTags([])
 
-     /*    axios
-        .get('/api/events?filters[tags][id][$in][0]=12&filters[tags][id][$in][1]=14', {
-          headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
-        })
-        .then(({ data }) => {console.log('events', data); 
-
-
-        })
-        .catch((error) => console.log(error))
-*/
-
-      }, []) 
+      }, [Tags]) 
 
 
 
@@ -201,8 +178,9 @@ const Homepage = () => {
 
 function handleTagChange(e) {
     console.log('change ', getValues(), e)
-    console.log('line ', TagUtils.withParents(e))
-    setdisplayTags(TagUtils.withParents(e))
+    console.log('line ', Tags.allDetails(e))
+    console.log('tags', Tags.getList())
+    setdisplayTags(Tags.allDetails(e))
 
 
 }
@@ -311,7 +289,7 @@ function handleTagChange(e) {
                     }
                     placeholder='tags'
                     isMulti={true}
-                    options={TagUtils.flattenTags(tags, [])}
+                    options={Tags.getList()}
                 />
               </div>
             )}

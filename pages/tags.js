@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect, useId} from "react";
 import {
     Modal,
@@ -64,7 +66,7 @@ import {
         console.log('getLIST', Tags.getList())
     //    TagUtils.get(setTags)
 
-      }, [])
+      }, [Tags])
 
     const [opTag, setOpTag] = useState();
 

@@ -21,13 +21,16 @@ import {
 } from '@chakra-ui/react'
 import { VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
+import { useTags } from '../providers/Tag'
+import { useAuth } from '../providers/Auth'
 
 //import { ErrorMessage } from "@hookform/error-message";
 import AlertPop from "../components/alertPop";
-import commonTagCode from "../components/commonTagCode";
+
 import Select from "react-select";
 import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
+import { toLocalISOString } from "../lib/date";
 
 
 
@@ -36,8 +39,9 @@ export default function Crud(props) {
     const toast = useToast();
     const { isOpen, onOpen, onClose } = useDisclosure();
     const [error, setError] = useState(null);
-    const [tags, setTags] = useState([]);
-    const TagUtils = commonTagCode()
+    const Tags = useTags()
+    const { jwt, user } = useAuth();
+
     const {
         control,
         reset,
@@ -56,14 +60,14 @@ export default function Crud(props) {
         if (opItem)
             data.id = opItem.id
 
-        let updateItem = { details: data.details } //todo   isDirty-defaultValue  fields by type?
+        let updateItem = {dateTime: (new Date(data.dateTime)).toISOString(), details: data.details } //todo   isDirty-defaultValue  fields by type?
         axios
             .put(`/api/${props.model}/${data.id}`, { data: updateItem }, {
-                headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+                headers: { 'Authorization': `bearer ${jwt}` }
             })
             .then((resp) => {
                 console.log('resp', resp)
-                let updatedEvent = events.find(e => e.id == resp.data.data.id)
+                let updatedEvent = props.items.find(e => e.id == resp.data.data.id)
 
                 updatedEvent.details = JSON.parse(resp.data.data.attributes.details)
                 //forceUpdate()
@@ -81,7 +85,7 @@ export default function Crud(props) {
 
 
     useEffect(() => {
-        TagUtils.get(setTags)
+        Tags.getList()
 
     }, [])
 
@@ -91,10 +95,10 @@ export default function Crud(props) {
 
     function deleteItem() {
         console.log(alertProps)
-        //TagUtils.delete(opItem.id, setTags)
+
         axios
         .delete(`/api/${props.model}/${opItem.id}`, {
-          headers: { 'Authorization': `bearer ${localStorage.getItem('jwt')}` }
+          headers: { 'Authorization': `bearer ${jwt}` }
         })
         .then(({ data }) => {console.log('del item', data); 
 
@@ -114,8 +118,9 @@ export default function Crud(props) {
         setOpItem(event)  
         //todo  class?  props?
         setValue('description', event.description)
-        setValue('tags', TagUtils.withContext(event.tags, TagUtils.flattenTags(tags, [])), { shouldValidate: false, shouldDirty: false })
+        setValue('tags', Tags.withContext(event.tags), { shouldValidate: false, shouldDirty: false })
         setValue('details', JSON.stringify(event.details))
+        setValue('dateTime', toLocalISOString(event.dateTime))
         onOpen()
     }
 
@@ -140,7 +145,7 @@ export default function Crud(props) {
 
 
     const itemUpdated = () => {
-        TagUtils.get(setTags)
+
         onClose()
         reset()
         toast({
