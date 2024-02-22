@@ -26,6 +26,8 @@ import {
 } from '@chakra-ui/react';
 import { HamburgerIcon, CloseIcon, MoonIcon, SunIcon } from '@chakra-ui/icons';
 import { useAuth} from '../providers/Auth'
+import { useTags } from '../providers/Tag'
+
 
 const Links = [{label:'Dashboard', href: '/'}, {label:'Activities', href:'activities'},{label:'Events', href:'/events'} ,{label:'Tags', href:'/tags'}];
 
@@ -47,6 +49,7 @@ export default function Simple({state, children}) {
 
   const { colorMode, toggleColorMode } = useColorMode()
   const { user, logout } = useAuth()
+  const { resetTags } = useTags()
 
   const { push } = useRouter();
   return <>
@@ -57,7 +60,7 @@ export default function Simple({state, children}) {
       <Center width={'100vw'}>  <Spinner />  </Center>
     }
 
-    {!user &&      
+    {!user &&     
               <HStack style={{ display: "flex", columnGap: "20px", justifyContent: "end" }}>
                   {!user && 
                       <Button>
@@ -114,8 +117,9 @@ export default function Simple({state, children}) {
               minW={0}>
               <Avatar
                 size={'sm'}
+                alt = {`user image ${user.name}`}
                 src={
-                  `https://www.gravatar.com/avatar/${md5(/*user.email*/ 'smalltalkman@gmail.com')}?size=100)`
+                  `https://www.gravatar.com/avatar/${md5(user.email)}?size=100)`
                 }
               />
             </MenuButton>
@@ -123,7 +127,7 @@ export default function Simple({state, children}) {
               <MenuItem onClick={() => {
 
 
-                    
+                      resetTags()
                        logout()
                         push('/');}}>
                 Logoff

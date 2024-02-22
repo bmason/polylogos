@@ -29,7 +29,6 @@ import Crud from "../components/CRUD";
 import Select from "react-select";
 import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
-import { Context } from  '../context/context';
 import { toLocalDateTime } from '../lib/date'
 import { useAuth } from '../providers/Auth'
 
@@ -103,7 +102,8 @@ console.log('edit props ', props)
 
 
 function DisplayItem(props) { 
-    const Tags = useTags()
+    const Tags = useTags() 
+
     if (props.item.details && props.item.details.constructor === String)
         props.item.details = JSON.parse(props.item.details)
 
@@ -111,13 +111,18 @@ function DisplayItem(props) {
         if ( props.item.details && props.item.details.dose)
             props.item.description = props.item.details.dose + ' ' + props.item.tags[0].name     
         else (
-            props.item.dateTime = (new Date(props.item.createdAt)).toLocaleDateString()
+            props.item.dateTime = toLocalDateTime(props.item.dateTime)
         )
     }
+
+    let tagLine = ''
+    if (props.item.tags)
+        props.item.tags.forEach(tag=>(tagLine += (tagLine ? ', ' : '') + Tags.getList().find(e=>tag.id==e.id).label))
 
     return     (
         <>
         <p>{props.item.description}</p>
+        <p>{tagLine}</p>        
         <p>{props.item.dateTime || props.item.details.date }  {props.item.details && props.item.details.currency}{props.item.details && props.item.details.amount}</p>
     
     </>  
@@ -144,7 +149,6 @@ export default function Builder() {
 
     const [selectedOptions, setSelectedOptions] = useState();
     const [events, setEvents] = useState([]);
-    const [context, setContext ] = useContext(Context)
     const { jwt, user } = useAuth();
 
 /*     useEffect(() => {
@@ -259,7 +263,7 @@ export default function Builder() {
     }
 
 
-    function find() {
+    async function  find() {
         console.log('values', getValues())
  
 
@@ -271,43 +275,70 @@ export default function Builder() {
         if (getValues().afterDate) {
             qs += `&filters[createdAt][$gt]=${getValues().afterDate}`
         }   
-
+        let qsTags = ''
+        let family 
         if (getValues().findTags) {
-            let family = Tags.family(getValues().findTags)
+            family = Tags.family(getValues().findTags)
             console.log('family', family)
+
             for (let i = 0; i < family.length; i++) {
-                qs += `&filters[tags][id][$in][${i}]=${family[i]}`
+                qsTags += `&filters[tags][id][$in][${i}]=${family[i]}`
             }
         }
 
 console.log('qs', qs)
-        axios
-            .get('/api/events?populate=activity,tags&pagination[limit]=-1' + qs, {
+        let response = await axios
+            .get(`/api/events?populate=activity,tags&pagination[limit]=-1&filters[userId][$eq]=${user.id}` + qs + qsTags, {
                 headers: { 'Authorization': `bearer ${jwt}` }
             })
-            .then(({ data }) => {
+            .catch((error) => console.log(error))
 
+        let rawEvents = response.data.data
 
+        let accessTags = Array.from(Tags.getAccess().keys()); 
 
-                data.data.forEach(e => { //replace with find
+        for (let i = 0; i < accessTags.length; i++) {
+            //qs += `&filters[tags][id][$in][${i}]=${accessTags[i]}`
+        }
+        console.log('qs', qs)
+        response =   await axios
+        .get(`/api/events?populate=activity,tags&pagination[limit]=-1&filters[userId][$ne]=${user.id}` + qs + qsTags, {
+            headers: { 'Authorization': `bearer ${jwt}` }
+        })
+        .catch((error) => console.log(error))
+
+        //rawEvents = rawEvents.concat(response.data.data)
+
+        console.log('at',accessTags)
+
+        response.data.data.forEach(e=>{
+            let include = true
+
+            e.attributes.tags.data.forEach(f=>{if (!accessTags.includes(f.id)) include = false;})
+            let tagIds = e.attributes.tags.data.map(f=>f.id)
+            if (include && getValues().findTags && (family.filter(f=>tagIds.includes(f))).length == 0)
+                include = false
+            include && rawEvents.push(e)
+        })
+
+                rawEvents.forEach(e => { //replace with find
                     Object.assign(e, e.attributes)
                     e.details = JSON.parse(e.details) || {}
                     //e.dateTime = new Date(new Date(e.dateTime).getTime() - (new Date()).getTimezoneOffset() * 60000).toISOString().slice(0, 19);                     
                     e.dateTimeISO = e.dateTime || e.details.date
 
-                    e.dateTime = toLocalDateTime(e.dateTime)
+                    e.dateTime = toLocalDateTime(e.dateTime || e.details.date)
 
                     e.tags = e.tags.data
                     e.tags.forEach(f => Object.assign(f, f.attributes))
                 
                 })
-                console.log('events after process ', data.data)
-                data.data.sort(eventSort)
+                console.log('events after process ', rawEvents)
+                rawEvents.sort(eventSort)
                 //data.data.sort((a, b) => getDatesFromItem(a).sortDate > getDatesFromItem(b).sortDate ? 1 : -1)
                 //setEvents(spliceSummaryInto(data.data, [{ period: 'month', detail: 'amount', label: 'monthly amount' }, { period: 'total', detail: 'amount', label: 'total amount' }]))
-                setEvents(data.data);  //spliceSummaryInto(data.data, [{ period: 'day', detail: 'pomodoro', label: 'daily pomodoro' },{ period: 'week', detail: 'pomodoro', label: 'weekly pomodoro' }, { period: 'total', detail: 'pomodoro', label: 'pomodoro total' }]))
-            })
-            .catch((error) => console.log(error)) //(error) => fail(error))
+                setEvents(rawEvents);  //spliceSummaryInto(data.data, [{ period: 'day', detail: 'pomodoro', label: 'daily pomodoro' },{ period: 'week', detail: 'pomodoro', label: 'weekly pomodoro' }, { period: 'total', detail: 'pomodoro', label: 'pomodoro total' }]))
+
 
 
 

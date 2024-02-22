@@ -119,7 +119,7 @@ const Homepage = () => {
 
 
     function details (fieldTags) { 
-console.log('fields', fieldTags)
+
         return (fieldTags.map(e => {console.log(e);
            return (<HStack w='100%'  key={e.title}>  
                 <Box w={e.type == 'currency' ? '70%' : '100%'} >

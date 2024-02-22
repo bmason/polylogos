@@ -12,16 +12,71 @@ export const TagProvider =  ({ children }) => {
     const [list, setList] = useState([])
     const [tree, setTree] = useState([])
     const [map, setMap] = useState()
+    const [access, setAccess] = useState()
     const { jwt, user } = useAuth();
 
 
-    const fetchSortTags = () => {  console.log('jwt', jwt, user)
-        axios
-        .get('/api/tags?pagination[limit]=-1', {
+    const fetchSortTags = async () =>  {  
+        let data = await axios
+        .get(`/api/tags?pagination[limit]=-1&filters[userId][$eq]=${user.id}`, {
           headers: { 'Authorization': `bearer ${jwt}` }
         })
-        .then(({ data }) => {
-          data.data.forEach(e=>{Object.assign(e, e.attributes)
+        .catch((error) => console.log(error))
+          let rawTags = data.data.data
+
+          let share =   await axios
+          .get(`/api/shares?pagination[limit]=-1&filters[accessId][$eq]=u${user.id}`, {
+            headers: { 'Authorization': `bearer ${jwt}` }
+          })
+        .catch((error) => console.log(error))
+
+
+          let parents = new Set()
+          share.data.data.forEach(e =>{ if(e.attributes.inherit) parents.add(e.attributes.tagId*1)})
+         
+          console.log('shares', parents)
+          data = await axios
+          .get(`/api/tags?pagination[limit]=-1&filters[userId][$ne]=${user.id}`, { //todo user from access
+            headers: { 'Authorization': `bearer ${jwt}` }
+          })
+        .catch((error) => console.log(error))
+
+        
+        let possible = new Set(data.data.data.concat(rawTags))
+
+        let look = true
+        let accessMap = new Map()
+
+        while (look && possible.size) {  
+          look = false
+        for (const e of possible.values()){
+
+          if (parents.has(e.id)) {
+            if (e.userId != user.id) 
+              rawTags.push(e)
+            accessMap.set(e.id, e) //todo permission create, grant ... from share
+            e.shared='Brian'
+            look = true
+            possible.delete(e)
+          }
+          if (!e.attributes.parentId) {
+            possible.delete(e)
+            look = true
+          } else if (parents.has(e.attributes.parentId)){
+            if (e.userId != user.id) 
+              rawTags.push(e)
+            accessMap.set(e.id, e) //todo permission create, grant ... from share
+            possible.delete(e)
+            look = true
+            parents.add(e.id)
+          }
+
+        }         }
+           
+       setAccess(accessMap) 
+     
+
+          rawTags.forEach(e=>{Object.assign(e, e.attributes)
             if (e.details)
               e.details = JSON.parse(e.details)
             e.children = []
@@ -29,16 +84,15 @@ export const TagProvider =  ({ children }) => {
   
           let tagMap = new Map()
 
-          let cTags = data.data.map(e=>{e.key=e.id; e.value=e.id; tagMap.set(e.id, e); return e})
+          let cTags = rawTags.map(e=>{e.key=e.id; e.value=e.id; tagMap.set(e.id, e); return e})
           setMap(tagMap)
 
           let context = new Map();
           
           let forContext = [...cTags];  
-          //console.log(forContext);
+
           let previousLength;
           while (forContext.length && (previousLength != forContext.length)) {
-            console.log('length ', forContext.length)
             previousLength = forContext.length;
           ( [...forContext]).map((e, i) => {
            if (e.parentId) {
@@ -47,24 +101,31 @@ export const TagProvider =  ({ children }) => {
                forContext.splice(i,1)
              }
            } else {
-             context.set(e.id, e.label = e.name)
+            e.label = (e.shared? '[' + e.shared + ']' : '' ) + e.name
+             context.set(e.id, e.label )
              forContext.splice(i,1)
            }})
         
           }
-          //console.log('after cTags', cTags)
+
           cTags.sort((a,b) => (a.label < b.label) ? -1 : (a.label > b.label) ? 1 : 0)
           setList(cTags)
 
         cTags.forEach(e => {if (e.parentId) tagMap.get(e.parentId).children.push(e)})
           
          setTree(cTags.filter(e => !e.parentId))
-    console.log('tree', cTags.filter(e => !e.parentId))
 
-        })
-        .catch((error) => console.log(error))
+
+
+
+
 
     }
+
+  const reset = () => {
+
+    setList([])
+  }
 
   const family = (tags, familyList=[]) => {
 
@@ -81,6 +142,40 @@ export const TagProvider =  ({ children }) => {
     return familyList
 
   }
+
+  const  store = function (tag, success, fail) {
+
+    tag.parentId = tag.parent ? tag.parent.id : null
+
+  if (tag.id) {console.log('update', tag)
+
+    //resp = await update('tags', state.form.id, updates)
+    axios
+    .put(`/api/tags/${tag.id}`, {data: tag}, {
+      headers: { 'Authorization': `bearer ${jwt}` }
+    })
+    .then(({ data }) => {console.log('update tags', data); 
+        fetchSortTags()
+   
+        success(data) 
+        })
+    .catch((error) => console.log(error)) //fail(error))
+
+  } else {
+
+    tag.userId = user.id
+
+    axios
+    .post('/api/tags', {data: tag}, {
+      headers: { 'Authorization': `bearer ${jwt}` }
+    })
+    .then(({ data }) => {//console.log('tags', data); 
+      fetchSortTags()
+        success(data)
+    })
+    .catch((error) => console.log(error)) //(error) => fail(error))
+  }
+}
 
 
   const allDetails = (tags, fieldDetails={}) => {
@@ -104,9 +199,13 @@ export const TagProvider =  ({ children }) => {
       return map.get(id)
     }     
 
-    const getList = () => { //console.log('getList')
-        
-        if (!list || list.length == 0) {console.log('getting')
+    const resetTags = () => {
+      console.log('reset')
+      setList([])
+    }
+
+    const getList = () => { 
+        if (user && (!list || list.length == 0)) {console.log('getting')
             fetchSortTags()
         }
 
@@ -118,6 +217,10 @@ export const TagProvider =  ({ children }) => {
       return tags
     }
 
+    const getAccess = () => { 
+      return access
+    }
+
     const getTree = () => {
         if (!list || list.length == 0) {
             fetchSortTags()
@@ -127,7 +230,7 @@ export const TagProvider =  ({ children }) => {
     }
 
     return (
-        <Context.Provider  value={{ getList, getTree, findById, allDetails, family, withContext }}>
+        <Context.Provider  value={{resetTags, getAccess, getList, getTree, store, findById, allDetails, family, withContext }}>
             {children}
         </Context.Provider>
      )

@@ -50,10 +50,10 @@ import {
       formState: { errors }
     } = useForm();
 
-    const onSubmit = (data) => { console.log('submit', data)
+    const onSubmit = (data) => { 
       if(opTag)
         data.id = opTag.id
-   //   TagUtils.store(data, tagUpdated, setError)
+      Tags.store(data, tagUpdated, setError)
 
 
  
@@ -63,14 +63,12 @@ import {
 
 
     useEffect(() => {
-        console.log('getLIST', Tags.getList())
-    //    TagUtils.get(setTags)
-
+       Tags.getList()
       }, [Tags])
 
     const [opTag, setOpTag] = useState();
 
-function deleteTag(){ console.log(alertProps)
+function deleteTag(){
   //TagUtils.delete(opTag.id, setTags)
   alertClose()
 }
@@ -97,7 +95,6 @@ const cancelRef = React.useRef()
 
     function tagHierarchy(tags) {
 
-      //console.log('ta tags', tags)
       if (Array.isArray(tags))
       return (
          

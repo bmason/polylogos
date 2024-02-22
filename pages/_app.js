@@ -10,22 +10,20 @@ import { AuthProvider } from '../providers/Auth'
 
 function MyApp({ Component, pageProps }) {
   const [isLogged, setIsLogged] = useState();
-  const [context, setContext] = useState({treeTags: [], listTags: []});
+
 
   return (
-    <Context.Provider value={[context, setContext]}>
+
     <ChakraProvider theme={customTheme}>
-    <AuthProvider>
-        <TagProvider>
-
-          <Layout state={{isLogged: isLogged, setIsLogged: setIsLogged}}>
-            <Component state={{isLogged: isLogged, setIsLogged: setIsLogged}} {...pageProps} />
-          </Layout>
-        </TagProvider>         
-    </AuthProvider>
-
+      <AuthProvider>
+          <TagProvider>
+            <Layout >
+              <Component  {...pageProps} />
+            </Layout>
+          </TagProvider>         
+      </AuthProvider>
     </ChakraProvider>
-    </Context.Provider>
+
   );
 }
 
