@@ -16,6 +16,7 @@ import {
     ModalBody, 
     ModalCloseButton,
     HStack,
+    withDefaultColorScheme,
   } from '@chakra-ui/react'
   import {VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton  } from "@chakra-ui/react";
   import { useForm , Controller, } from "react-hook-form";
@@ -32,23 +33,7 @@ import {
 
 const Homepage = () => {
 
-  const { jwt, user } = useAuth()
-    const flexSettings = {
-        flex: "1",
-        minW: "300px",
-        textAlign: "center",
-        color: "white",
-        mx: "6",
-        mb: "6"
-      };
-    
-      const gridSettings = {
-        w: "100%",
-        textAlign: "center",
-        color: "white",
-      };
-
-
+      const { jwt, user } = useAuth()
 
       const btnRef = useRef();
      
@@ -211,24 +196,27 @@ function handleTagChange(e) {
 
 
       <VStack mt={4} > 
+
+     { user &&
   
-  <SimpleGrid w='500px'
-  bg='gray.50'
-  columns='1'
-  spacing='8'
-  p='10'
-  textAlign='center'
-  rounded='lg'
-  color='gray.400'
->
-<IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
+        <SimpleGrid w='500px'
+        bg='gray.50'
+        columns='1'
+        spacing='8'
+        p='10'
+        textAlign='center'
+        rounded='lg'
+        color='gray.400'
+        >
+          <IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
+
+        </SimpleGrid> 
+      }
 
 
-
-</SimpleGrid> 
-
-
- 
+      {!user &&
+      <text>welcome</text>
+      }
 
 
 <Modal blockScrollOnMount={false} isOpen={isOpen} onClose={onClose}>
@@ -311,7 +299,7 @@ function handleTagChange(e) {
     </ModalBody>
 
     <ModalFooter>
-      <Button variant='ghost'  mr={3} onClick={() => { reset({description:'test', currency:{id:'THB', label: 'THB'}}); console.log('reset ', getValues());}}>
+      <Button variant='ghost'  mr={3} onClick={() => { onClose();}}>
         Cancel
       </Button>
 

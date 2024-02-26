@@ -56,9 +56,7 @@ export default function Simple({state, children}) {
   
     <Box bg={useColorModeValue('gray.100', 'gray.900')} px={4}>
 
-    {user === null &&
-      <Center width={'100vw'}>  <Spinner />  </Center>
-    }
+
 
     {!user &&     
               <HStack style={{ display: "flex", columnGap: "20px", justifyContent: "end" }}>
@@ -117,7 +115,7 @@ export default function Simple({state, children}) {
               minW={0}>
               <Avatar
                 size={'sm'}
-                alt = {`user image ${user.name}`}
+                name = {`user image ${user.name}`}
                 src={
                   `https://www.gravatar.com/avatar/${md5(user.email)}?size=100)`
                 }

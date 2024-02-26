@@ -17,6 +17,7 @@ import {
     AlertDialogHeader,
     AlertDialogContent,
     AlertDialogOverlay,
+    Grid,
 
 } from '@chakra-ui/react'
 import { VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
@@ -103,6 +104,7 @@ console.log('edit props ', props)
 
 function DisplayItem(props) { 
     const Tags = useTags() 
+    const { user } = useAuth()
 
     if (props.item.details && props.item.details.constructor === String)
         props.item.details = JSON.parse(props.item.details)
@@ -124,6 +126,7 @@ function DisplayItem(props) {
         <p>{props.item.description}</p>
         <p>{tagLine}</p>        
         <p>{props.item.dateTime || props.item.details.date }  {props.item.details && props.item.details.currency}{props.item.details && props.item.details.amount}</p>
+        <Box pos="absolute" bottom="0" right="0"><Text fontSize='xs'>{props.item.userId != user.id && 'Brian'}</Text></Box>
     
     </>  
     )}
@@ -313,7 +316,7 @@ console.log('qs', qs)
 
         response.data.data.forEach(e=>{
             let include = true
-
+            //todo check userId also
             e.attributes.tags.data.forEach(f=>{if (!accessTags.includes(f.id)) include = false;})
             let tagIds = e.attributes.tags.data.map(f=>f.id)
             if (include && getValues().findTags && (family.filter(f=>tagIds.includes(f))).length == 0)
