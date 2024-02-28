@@ -32,7 +32,12 @@ export const TagProvider =  ({ children }) => {
 
 
           let parents = new Set()
-          share.data.data.forEach(e =>{ if(e.attributes.inherit) parents.add(e.attributes.tagId*1)})
+          share.data.data.forEach(e =>{ if(e.attributes.inherit) {
+            let tag =rawTags.find(f=>f.id==e.attributes.tagId*1) 
+            console.log('found ', tag)
+            if (!tag || tag.attributes.userId != user.id)
+              parents.add(e.attributes.tagId*1)
+          }})
          
           console.log('shares', parents)
           data = await axios
@@ -52,7 +57,7 @@ export const TagProvider =  ({ children }) => {
         for (const e of possible.values()){
 
           if (parents.has(e.id)) {
-            if (e.userId != user.id) 
+            if (e.attributes.userId != user.id) 
               rawTags.push(e)
             accessMap.set(e.id, e) //todo permission create, grant ... from share
             e.shared='Brian'

@@ -125,9 +125,10 @@ export default function Simple({state, children}) {
               <MenuItem onClick={() => {
 
 
-                      resetTags()
+
                        logout()
-                        push('/');}}>
+                        push('/');
+                        resetTags()}}>
                 Logoff
               </MenuItem>
               <MenuItem>Profile</MenuItem>

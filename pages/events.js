@@ -126,7 +126,8 @@ function DisplayItem(props) {
         <p>{props.item.description}</p>
         <p>{tagLine}</p>        
         <p>{props.item.dateTime || props.item.details.date }  {props.item.details && props.item.details.currency}{props.item.details && props.item.details.amount}</p>
-        <Box pos="absolute" bottom="0" right="0"><Text fontSize='xs'>{props.item.userId != user.id && 'Brian'}</Text></Box>
+        <p>{props.item.note}</p>
+        <Box pos="absolute" bottom="0" right="2"><Text fontSize='xs'>{props.item.userId != user.id && (user.id== 6 ? 'Brian' : 'Churee')}</Text></Box>
     
     </>  
     )}

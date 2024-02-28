@@ -60,7 +60,7 @@ export default function Crud(props) {
         if (opItem)
             data.id = opItem.id
 
-        let updateItem = {dateTime: (new Date(data.dateTime)).toISOString(), details: data.details } //todo   isDirty-defaultValue  fields by type?
+        let updateItem = {description: data.description, note: data.note, dateTime: (new Date(data.dateTime)).toISOString(), details: data.details } //todo   isDirty-defaultValue  fields by type?
         axios
             .put(`/api/${props.model}/${data.id}`, { data: updateItem }, {
                 headers: { 'Authorization': `bearer ${jwt}` }
