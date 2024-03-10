@@ -135,7 +135,7 @@ export default function Crud(props) {
 
 
     const openDialog = () => {
-        setOpItem(null)
+        setOpItem({})
         reset()
         onOpen()
 
@@ -161,7 +161,7 @@ export default function Crud(props) {
     return (
 
         <>
-
+     <IconButton width='10px' onClick={openDialog} icon={<AddIcon />} />
 
                 {props.items.map((e) =>
                     <Box key={e.id} mt='6px' pos="relative" boxShadow='xs' p='6' rounded='md' bg='white'>
@@ -240,12 +240,14 @@ export default function Crud(props) {
                                 errors={errors}  
                                 handleSubmit={handleSubmit}  
                                 register={register}   
-                                onSubmit={ onSubmit}/>
+                                onSubmit={ onSubmit}
+                                item={opItem}/>
 
                         </Box>
                     </ModalBody>
 
                     <ModalFooter>
+                        
                         <Button variant='ghost' mr={3} onClick={onClose}>
                             Cancel
                         </Button>

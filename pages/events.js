@@ -10,6 +10,7 @@ import {
     Menu,
     MenuButton,
     MenuList,
+  
     MenuItem,
     AlertDialog,
     AlertDialogBody,
@@ -20,7 +21,7 @@ import {
     Grid,
 
 } from '@chakra-ui/react'
-import { VStack, Stack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
+import { VStack, HStack, Input, useToast, Box, Button, Heading, Text, SimpleGrid, IconButton } from "@chakra-ui/react";
 import { useForm, Controller } from "react-hook-form";
 import {useTags} from '../providers/Tag'
 
@@ -30,75 +31,20 @@ import Crud from "../components/CRUD";
 import Select from "react-select";
 import axios from '../lib/axios';
 import { HamburgerIcon, EditIcon, DeleteIcon, AddIcon } from '@chakra-ui/icons'
-import { toLocalDateTime } from '../lib/date'
+import { toLocalDateTime, toLocalISOString } from '../lib/date'
 import { useAuth } from '../providers/Auth'
 
 
 
 
 
-function EventForm(props) {
-    const Tags = useTags()
-    
 
 
-console.log('edit props ', props)
-    return      <form onSubmit={props.handleSubmit(props.onSubmit)}>
-    <VStack>
-
-        <Input
-            type="text"
-            placeholder="description"
-            {...props.register("description", {
-                minLength: 3,
-                maxLength: 100
-            })}
-        />
-        {props.errors.description && <AlertPop title={errors.description.message} />}
-
-        <Input
-            type="text"
-            placeholder="details"
-            {...props.register("details", {
-                minLength: 0,
-                maxLength: 100
-            })}
-        />
-        <Input
-            type="datetime-local"
-            step="any"
-            {...props.register("dateTime", {
-                
-            })}
-        />
-
-        {props.errors.description && <AlertPop title={errors.description.message} />}
 
 
-        <Controller
-            name="tags"
-            control={props.control}
-            rules={{}}
-            render={({ field }) => (
-                <div style={{ width: '100%' }}>
-                    <Select {...field}  isMulti={true} options={Tags.getList()}
-                    />
-                </div>
-            )}
-        />
 
 
-    </VStack>
-    <Button
-        borderRadius="md"
-        bg="cyan.600"
-        _hover={{ bg: "cyan.200" }}
-        type="submit"
-    >
-        Save
-    </Button>
-</form>
-}
+
 
 
 
@@ -138,6 +84,11 @@ export default function Builder() {
     const [error, setError] = useState(null);
     const Tags = useTags()
 
+
+       
+       const [displayTags, setdisplayTags] = useState([])
+
+
     const {
         reset,
         control,
@@ -158,6 +109,136 @@ export default function Builder() {
 /*     useEffect(() => {
         TagUtils.get(setTags)
     }, []) */
+
+
+    function details (fieldTags, props) { 
+    
+
+        return (fieldTags.map(e => {
+           return (<HStack w='100%'  key={e.title}>  
+                <Box w={e.type == 'currency' ? '70%' : '100%'} >
+                    <Input
+                        type={e.type == 'currency' ? 'number' : 'number'}
+                        placeholder={e.title}
+                        {...props.register(e.title)}
+                        defaultValue={props.item.details
+                            ? props.item.details[e.title] : null}
+    
+                    />
+                </Box>
+                {e.type == 'currency' &&
+                  <Box w='30%'>
+                    <Controller
+                        name="currency"
+                        type="select"
+                        control={props.control}
+                        
+                        render={({ field }) => (
+                            <Select 
+                                {...field}   
+                          
+                                options={[{id: 'THB', label:'THB'}, {id:'USD', label:'USD'}]}
+                                defaultValue={props.item.currency ?
+                                    {id: props.item.currency, label: props.item.currency}
+                                    : {id: e.defaultCurrency, label: e.defaultCurrency}}
+                            />
+    
+                        )}
+                    />
+                  </Box>  
+                }
+            </HStack>)}))
+    }
+
+
+
+
+    function EventForm(props) {
+        const Tags = useTags()
+        
+    
+    
+    console.log('edit props ', props)
+        return      <form onSubmit={props.handleSubmit(props.onSubmit)}>
+        <VStack>
+    
+            <Input
+                type="text"
+                placeholder="description"
+                {...props.register("description", {
+                    minLength: 3,
+                    maxLength: 100
+                })}
+            />
+            {props.errors.description && <AlertPop title={errors.description.message} />}
+    
+            <Input
+                type="text"
+                placeholder="details"
+                {...props.register("details", {
+                    minLength: 0,
+                    maxLength: 100
+                })}
+            />
+            <Input
+                type="datetime-local"
+                step="any"
+                defaultValue={toLocalISOString()}   
+                {...props.register("dateTime", {
+                 
+                })}
+            />
+    
+            {props.errors.description && <AlertPop title={errors.description.message} />}
+    
+    
+            <Controller
+                name="tags"
+                type="select"
+                control={props.control}
+               
+                rules={{ }}
+                render={({ field }) => (
+                  <div style={{width: '100%'}}>
+                    <Select {...field}   
+                        onChange={e => { 
+                          field.onChange(e)
+                          handleTagChange(e)}
+                        }
+                        placeholder='tags'
+                        isMulti={true}
+                        options={Tags.getList()}
+                    />
+                  </div>
+                )}
+              />
+        {details(displayTags, props) }
+    
+        </VStack>
+        <Button
+            borderRadius="md"
+            bg="cyan.600"
+            _hover={{ bg: "cyan.200" }}
+            type="submit"
+        >
+            Save
+        </Button>
+    </form>
+    }
+
+
+
+
+
+
+    function handleTagChange(e) {
+        console.log('change ', getValues(), e)
+        console.log('line ', Tags.allDetails(e))
+        console.log('tags', Tags.getList())
+        setdisplayTags(Tags.allDetails(e))
+       
+       
+       }
 
     function spliceSummaryInto(items, options) {
         //let inDay =  inWeek = false

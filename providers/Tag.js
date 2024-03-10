@@ -57,8 +57,7 @@ export const TagProvider =  ({ children }) => {
         for (const e of possible.values()){
 
           if (parents.has(e.id)) {
-            if (e.attributes.userId != user.id) 
-              rawTags.push(e)
+            rawTags.push(e)
             accessMap.set(e.id, e) //todo permission create, grant ... from share
             e.shared='Brian'
             look = true
@@ -68,8 +67,7 @@ export const TagProvider =  ({ children }) => {
             possible.delete(e)
             look = true
           } else if (parents.has(e.attributes.parentId)){
-            if (e.userId != user.id) 
-              rawTags.push(e)
+            rawTags.push(e)
             accessMap.set(e.id, e) //todo permission create, grant ... from share
             possible.delete(e)
             look = true

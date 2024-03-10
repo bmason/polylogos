@@ -36,10 +36,9 @@ const NavLink = ({ children, fs }) => (
     px={2}
     py={1}
     rounded={'md'}
-    cursor={'pointer'}
     href={children.href}
     legacyBehavior>
-    <Text fontSize={fs ? '2xl' : null}>{children.label}</Text>
+    <Text  style={{cursor: 'pointer'}} fontSize={fs ? '2xl' : null}>{children.label}</Text>
   </Link>
 );
 
@@ -70,7 +69,7 @@ export default function Simple({state, children}) {
                    {!user && 
                                 <Button>
                             
-                                <Link href="/auth/login">
+                                <Link href="/auth/login" >
                                     Login
                                 </Link>
                                 
@@ -95,7 +94,7 @@ export default function Simple({state, children}) {
           onClick={isOpen ? onClose : onOpen}
         />
         <HStack spacing={8} alignItems={'center'}>
-          <Box><Image width="155" height="67" src="/PLLogo.png" /></Box>
+          <Box><Image width="155" height="67" src="/PLLogo.png" alt="polylogos logo"/></Box>
           <HStack
             as={'nav'}
             spacing={4}
@@ -123,9 +122,6 @@ export default function Simple({state, children}) {
             </MenuButton>
             <MenuList>
               <MenuItem onClick={() => {
-
-
-
                        logout()
                         push('/');
                         resetTags()}}>

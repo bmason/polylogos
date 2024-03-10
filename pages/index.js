@@ -3,6 +3,7 @@ import Link from 'next/link';
 
 import axios from '../lib/axios';
 import Head from "next/head"
+import MyEditor from "../components/mySlate"
 
 import {toLocalISOString} from '../lib/date'
 
@@ -28,6 +29,7 @@ import {
   import { setNestedObjectValues } from 'formik';
   import { useAuth } from '../providers/Auth'
   import {useTags} from '../providers/Tag'
+import MySlate from '../components/mySlate';
   
 
 
@@ -213,9 +215,10 @@ function handleTagChange(e) {
         </SimpleGrid> 
       }
 
-
+      <MySlate></MySlate>
       {!user &&
-      <text>welcome</text>
+      <Text>welcome</Text>
+
       }
 
 
